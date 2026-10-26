@@ -198,6 +198,56 @@ p.subtitle {
   color: #cbd5e1;
 }
 
+/* Wiring Pillars & Philosophy */
+.wiring-section { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--border); }
+.pillars-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin: 20px 0; }
+.pillar-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  position: relative;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.pillar-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+.pillar-num {
+  font-size: 11px; font-weight: 800; font-family: 'JetBrains Mono', monospace;
+  color: var(--blue); background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3);
+  padding: 2px 8px; border-radius: 999px; display: inline-block; margin-bottom: 10px; width: fit-content;
+}
+.pillar-title { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+.pillar-desc { font-size: 13px; color: var(--txt-muted); line-height: 1.55; flex-grow: 1; }
+.formula-box {
+  background: #090c14;
+  border: 1px solid rgba(59,130,246,0.25);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin: 10px 0 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: #38bdf8;
+  line-height: 1.5;
+}
+.pair-tag {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 6px; border-radius: 4px; font-size: 11.5px; font-weight: 600;
+  background: rgba(6,182,212,0.15); color: var(--cyan); border: 1px solid rgba(6,182,212,0.3);
+  font-family: 'JetBrains Mono', monospace;
+}
+.defense-box {
+  background: linear-gradient(135deg, rgba(59,130,246,0.12) 0%, rgba(139,92,246,0.12) 100%);
+  border: 1px solid rgba(59,130,246,0.35);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin: 24px 0 10px;
+}
+.defense-box h4 {
+  color: #93c5fd; font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+}
+.defense-box p { font-size: 13.5px; color: #e2e8f0; line-height: 1.6; }
+
 /* Callout Alert */
 .alert {
   background: var(--card);
@@ -381,23 +431,23 @@ footer {
 
   <!-- Navigation Tabs -->
   <div class="tabs-nav">
-    <button class="tab-btn active" onclick="switchTab('hw')">🔌 1. Phần Cứng & GND Phụ</button>
+    <button class="tab-btn active" onclick="switchTab('hw')">🔌 1. Phần Cứng & Triết Lý Đi Dây</button>
     <button class="tab-btn" onclick="switchTab('slide')">📑 2. Slide Tuần 4, 5 vs Code</button>
     <button class="tab-btn" onclick="switchTab('code')">🧠 3. Kiến Trúc 8 Khối Code</button>
     <button class="tab-btn" onclick="switchTab('test')">🧪 4. Bộ 15 Kịch Bản Kiểm Thử</button>
     <button class="tab-btn" onclick="switchTab('qa')">🎯 5. Bộ Phản Xạ Vấn Đáp A+</button>
   </div>
 
-  <!-- ================= TAB 1: PHẦN CỨNG ================= -->
+  <!-- ================= TAB 1: PHẦN CỨNG & ĐI DÂY ================= -->
   <div id="tab-hw" class="tab-panel active">
-    <div class="section-title">🔌 Bóc Tách Các Thành Phần Phần Cứng & Cơ Chế GND Phụ</div>
-    <p class="section-desc">Mọi linh kiện trong sơ đồ Wokwi đều được tính toán tối ưu dòng điện và lược bỏ các phần rườm rà.</p>
+    <div class="section-title">🔌 Bóc Tách Các Thành Phần Phần Cứng & Linh Kiện Ngoại Vi</div>
+    <p class="section-desc">Mọi linh kiện trong sơ đồ Wokwi đều được tính toán tối ưu dòng điện, loại bỏ thành phần dư thừa và chọn chân chuẩn datasheet.</p>
 
     <div class="alert blue">
       <div class="alert-icon">💡</div>
       <div class="alert-content">
-        <h4>Điểm Sáng Tạo: Kỹ Thuật "GND Phụ" (Virtual GND bằng GPIO)</h4>
-        <p>Trên board ESP32 chỉ có 2 chân GND thật. Thay vì nối dây chằng chịt về ray âm breadboard, code cấu hình 6 chân GPIO <code>D22, D19, D16, D33, D14, D4</code> xuất mức <code>OUTPUT LOW</code> (0V) để làm chân âm riêng cho LED, nút bấm và PIR. Dòng tiêu thụ của LED chỉ ~6mA, nút nhấn ~0.07mA, PIR ~0.05mA, hoàn toàn an toàn dưới ngưỡng 20mA của chân ESP32.</p>
+        <h4>Điểm Sáng Tạo Kỹ Thuật: Sơ Đồ Đấu Nối Rút Gọn Cực Độ</h4>
+        <p>Hệ thống loại bỏ hoàn toàn bàn phím ma trận và màn hình LCD/OLED cồng kềnh, chuyển toàn bộ giao diện điều khiển lên Web WiFi. Nhờ đó số lượng chân cắm giảm từ hơn 16 chân xuống chỉ còn 8 chân GPIO, vừa tiết kiệm chi phí vừa triệt tiêu nguy cơ hỏng hóc vật lý ngoài trời.</p>
       </div>
     </div>
 
@@ -463,6 +513,170 @@ footer {
         </div>
         <div class="hw-desc">🔴 Đỏ (D23): Khóa / Báo động | 🟢 Xanh (D18): Mở khóa | 🟡 Vàng (D17): Có người / Phạt lockout. Mỗi LED nối tiếp trở 220Ω hạn dòng.</div>
         <div class="hw-box">Cực âm LED nối vào các chân GND phụ D22, D19, D16.</div>
+      </div>
+    </div>
+
+    <!-- ===== PHẦN TRIẾT LÝ ĐI DÂY CHUYÊN SÂU ===== -->
+    <div class="wiring-section">
+      <div class="section-title">⚡ PHÂN TÍCH CHUYÊN SÂU: TẠI SAO PHẢI ĐI DÂY NHƯ THẾ VỚI ESP32?</div>
+      <p class="section-desc">Cách đi dây của hệ thống không phải cắm ngẫu nhiên mà tuân thủ nghiêm ngặt <strong>4 trụ cột kỹ thuật có chủ đích (Design by Intent)</strong> nhằm tối ưu vật lý và an toàn điện.</p>
+
+      <div class="pillars-grid">
+        <div class="pillar-card">
+          <span class="pillar-num">TRỤ CỘT 1</span>
+          <div class="pillar-title">Nút Thắt Thiếu Chân GND</div>
+          <div class="pillar-desc">
+            Board ESP32 30 chân chỉ có đúng <strong>02 chân GND vật lý</strong>. Nhưng mạch có tới 8 tải cần tiếp mass. Nếu kéo tất cả về ray Breadboard, mạch sẽ thành "tổ quạ" chằng chịt, dễ chập và tuột chân.
+            <div class="formula-box">
+              GND_PINS[] = {22, 19, 16, 33, 14, 4};<br>
+              pinMode(pin, OUTPUT);<br>
+              digitalWrite(pin, LOW); // 0V Tiếp địa
+            </div>
+            Nhóm tạo ra 6 chân <strong>GND phụ</strong> tại chỗ để phân tán điểm tiếp địa.
+          </div>
+        </div>
+
+        <div class="pillar-card">
+          <span class="pillar-num">TRỤ CỘT 2</span>
+          <div class="pillar-title">Nghệ Thuật Ghép Cặp Liền Kề</div>
+          <div class="pillar-desc">
+            Nhóm chủ đích lựa chọn chân tín hiệu và chân GND phụ nằm <strong>sát cạnh nhau</strong> trên cùng một hàng header ESP32:
+            <ul style="margin: 8px 0 0 16px; font-size: 12.5px; color: var(--txt-muted);">
+              <li>🔴 LED Đỏ: <span class="pair-tag">D23 (+)</span> & <span class="pair-tag">D22 (-)</span></li>
+              <li>🟢 LED Xanh: <span class="pair-tag">D18 (+)</span> & <span class="pair-tag">D19 (-)</span></li>
+              <li>🟡 LED Vàng: <span class="pair-tag">TX2 (+)</span> & <span class="pair-tag">RX2 (-)</span></li>
+              <li>🚪 Nút EXIT: <span class="pair-tag">D32</span> & <span class="pair-tag">D33 (-)</span></li>
+              <li>🔒 Nút LOCK: <span class="pair-tag">D13</span> & <span class="pair-tag">D14 (-)</span></li>
+            </ul>
+            <p style="margin-top: 6px;">Giúp đi dây song song, cắm được giắc đôi 2-pin và có thể lắp mạch <strong>không cần Breadboard</strong>.</p>
+          </div>
+        </div>
+
+        <div class="pillar-card">
+          <span class="pillar-num">TRỤ CỘT 3</span>
+          <div class="pillar-title">Tính Toán Định Luật Ohm & Dòng Tải</div>
+          <div class="pillar-desc">
+            Chân GPIO của ESP32 chịu dòng sink tối đa 20mA - 40mA. Nhóm đã tính toán định lượng chính xác:
+            <div class="formula-box">
+              LED: I = (3.3V - 2.0V) / 220Ω ≈ 5.9 mA<br>
+              Nút: I = 3.3V / 45kΩ ≈ 0.073 mA<br>
+              PIR GND: I ≈ 0.05 mA<br>
+              👉 Tất cả &lt;&lt; 20mA (Tuyệt đối an toàn)
+            </div>
+            <strong>Riêng Còi (30-50mA) và Relay (70mA):</strong> Bắt buộc đưa về <strong>GND thật</strong> và nguồn <strong>VIN (5V)</strong> để tránh sụt áp gây reset vi điều khiển.
+          </div>
+        </div>
+
+        <div class="pillar-card">
+          <span class="pillar-num">TRỤ CỘT 4</span>
+          <div class="pillar-title">Tuân Thủ Datasheet & Tránh Lỗi Boot</div>
+          <div class="pillar-desc">
+            Nhóm phân loại chân theo đúng sơ đồ kiến trúc ESP32:
+            <ul style="margin: 8px 0 0 16px; font-size: 12.5px; color: var(--txt-muted);">
+              <li><strong>PIR nối GPIO 35:</strong> D35 là chân <em>Input-Only (GPI)</em> không có trở kéo nội, dùng làm ngõ vào cảm biến là chuẩn sách giáo khoa.</li>
+              <li><strong>Tránh chân Strapping:</strong> Không cắm tải nặng vào GPIO 0, 2, 12, 15 để tránh lỗi nạp code hoặc kẹt Bootloader khi khởi động.</li>
+              <li><strong>Relay Active-Low:</strong> Ngăn ngừa tình trạng chốt khóa bị giật mở bậy bạ lúc chip đang boot.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bảng Ma Trận Đấu Nối Toàn Diện -->
+      <div class="section-title" style="font-size: 17px; margin-top: 24px;">📋 Bảng Ma Trận Đấu Nối & Thông Số Điện Áp - Dòng Tải Chi Tiết</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Thiết Bị</th>
+              <th>Chân (+)</th>
+              <th>Chân (-)</th>
+              <th>Loại GND</th>
+              <th>Điện Áp</th>
+              <th>Dòng Ước Tính</th>
+              <th>Cơ Chế Bảo Vệ / Ghi Chú</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>LED Đỏ</strong></td>
+              <td><code>GPIO 23 (D23)</code></td>
+              <td><code>GPIO 22 (D22)</code></td>
+              <td><span class="badge primary">GND Phụ</span></td>
+              <td>3.3V Logic</td>
+              <td>~5.9 mA</td>
+              <td>Mắc nối tiếp điện trở hạn dòng 220Ω</td>
+            </tr>
+            <tr>
+              <td><strong>LED Xanh Lá</strong></td>
+              <td><code>GPIO 18 (D18)</code></td>
+              <td><code>GPIO 19 (D19)</code></td>
+              <td><span class="badge primary">GND Phụ</span></td>
+              <td>3.3V Logic</td>
+              <td>~5.9 mA</td>
+              <td>Mắc nối tiếp điện trở hạn dòng 220Ω</td>
+            </tr>
+            <tr>
+              <td><strong>LED Vàng</strong></td>
+              <td><code>GPIO 17 (TX2)</code></td>
+              <td><code>GPIO 16 (RX2)</code></td>
+              <td><span class="badge primary">GND Phụ</span></td>
+              <td>3.3V Logic</td>
+              <td>~5.9 mA</td>
+              <td>Cặp chân UART phụ liền kề, qua trở 220Ω</td>
+            </tr>
+            <tr>
+              <td><strong>Nút EXIT (Đỏ)</strong></td>
+              <td><code>GPIO 32 (D32)</code></td>
+              <td><code>GPIO 33 (D33)</code></td>
+              <td><span class="badge primary">GND Phụ</span></td>
+              <td>3.3V Pullup</td>
+              <td>~0.07 mA</td>
+              <td>Bật INPUT_PULLUP nội (~45kΩ), chống rung 50ms</td>
+            </tr>
+            <tr>
+              <td><strong>Nút LOCK (Trắng)</strong></td>
+              <td><code>GPIO 13 (D13)</code></td>
+              <td><code>GPIO 14 (D14)</code></td>
+              <td><span class="badge primary">GND Phụ</span></td>
+              <td>3.3V Pullup</td>
+              <td>~0.07 mA</td>
+              <td>Bật INPUT_PULLUP nội (~45kΩ), chống rung 50ms</td>
+            </tr>
+            <tr>
+              <td><strong>Cảm Biến PIR</strong></td>
+              <td><code>Chân VIN (5V)</code></td>
+              <td><code>GPIO 4 (D4)</code></td>
+              <td><span class="badge primary">GND Phụ</span></td>
+              <td>5V / Tín hiệu 3.3V</td>
+              <td>~0.05 mA</td>
+              <td>Chân OUT nối D35 (chân Input-Only chuyên dụng)</td>
+            </tr>
+            <tr>
+              <td><strong>Còi Báo Động (Buzzer)</strong></td>
+              <td><code>GPIO 25 (D25)</code></td>
+              <td><code>GND Thật ESP32</code></td>
+              <td><span class="badge warning">GND Cứng</span></td>
+              <td>3.3V PWM</td>
+              <td>~30 - 50 mA</td>
+              <td>Phát tần số 2kHz bằng tone(), tải lớn nối GND thật</td>
+            </tr>
+            <tr>
+              <td><strong>Relay 1 & Relay 2</strong></td>
+              <td><code>Chân VIN (5V)</code></td>
+              <td><code>GND Thật ESP32</code></td>
+              <td><span class="badge warning">GND Cứng</span></td>
+              <td>5V Nuôi cuộn dây</td>
+              <td>~60 - 80 mA</td>
+              <td>Cách ly quang Optocoupler, kích mức LOW (Active-Low)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Kịch Bản Phản Xạ Đi Dây 30 Giây -->
+      <div class="defense-box">
+        <h4>🎯 Kịch Bản Trả Lời Vấn Đáp 30 Giây Về Phần Đi Dây:</h4>
+        <p>"Thưa thầy, sơ đồ đi dây của nhóm em được thiết kế có chủ đích dựa trên 3 tiêu chí kỹ thuật: (1) <strong>Giải quyết bài toán thiếu chân mass:</strong> ESP32 chỉ có 2 chân GND thật trong khi mạch có 8 tải, nhóm đã dùng GPIO xuất mức LOW để tạo GND phụ; (2) <strong>Bố trí các cặp chân liền kề:</strong> Chân tín hiệu và chân GND phụ luôn đi đôi với nhau (như D23-D22, D18-D19, D32-D33) để đường dây đi song song, chống chập rối và có thể lắp ráp trực tiếp không cần Breadboard; (3) <strong>Phân loại tải an toàn theo định luật Ohm:</strong> Các tải nhỏ (&lt; 6mA) mới đi qua GND phụ, còn còi báo động và cuộn hút Relay ăn dòng lớn đều được đấu về GND thật và nguồn VIN 5V để bảo vệ vi điều khiển ạ!"</p>
       </div>
     </div>
   </div>
@@ -752,7 +966,23 @@ footer {
         <div class="qa-body">
           Giải thích logic trong hàm `readSensors()`.
           <div class="highlight-ans">
-            <strong>Cách trả lời:</strong> "Dạ, nếu ai đó chỉ đi ngang qua cửa (< 8s) thì hệ thống chỉ sáng đèn vàng chào đón. Nhưng nếu cảm biến PIR duy trì mức HIGH liên tục, cửa đang ở trạng thái KHÓA, và thời gian đứng vượt quá ngưỡng <code>PIR_ALARM_DELAY_MS = 8000ms</code> (8 giây), hệ thống sẽ đánh giá đây là hành vi lảng vảng rình mò và lập tức kích hoạt còi hú cùng Relay 2 để cảnh báo kẻ gian ạ."
+            <strong>Cách trả lời:</strong> "Dạ, nếu ai đó chỉ đi ngang qua cửa (&lt; 8s) thì hệ thống chỉ sáng đèn vàng chào đón. Nhưng nếu cảm biến PIR duy trì mức HIGH liên tục, cửa đang ở trạng thái KHÓA, và thời gian đứng vượt quá ngưỡng <code>PIR_ALARM_DELAY_MS = 8000ms</code> (8 giây), hệ thống sẽ đánh giá đây là hành vi lảng vảng rình mò và lập tức kích hoạt còi hú cùng Relay 2 để cảnh báo kẻ gian ạ."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-head" onclick="toggleQA(this)">
+          <span>6. Thầy hỏi: "Giải thích cơ sở khoa học của cách đi dây trong mạch? Tại sao lại cắm chân âm của LED và nút bấm vào chân GPIO của ESP32?"</span>
+          <span class="icon">▼</span>
+        </div>
+        <div class="qa-body">
+          Câu hỏi trọng tâm về phần cứng và kỹ thuật nối dây trực tiếp.
+          <div class="highlight-ans">
+            <strong>Cách trả lời:</strong> "Dạ thưa thầy, cách đi dây này dựa trên 3 cơ sở kỹ thuật có tính toán:
+            <br>1. <strong>Khắc phục việc ESP32 chỉ có 2 chân GND thật:</strong> Mạch có 8 tải ngoại vi, nếu kéo chung dây mass sẽ rất rối và dễ tuột. Nhóm dùng kỹ thuật <em>GND phụ</em> (cho GPIO xuất LOW) để phân tán chân mass tại chỗ.
+            <br>2. <strong>Chọn cặp chân liền kề:</strong> Chân tín hiệu và chân mass luôn đi đôi sát nhau (D23-D22, D18-D19, TX2-RX2, D32-D33, D13-D14), giúp đường dây đi song song, cắm được giắc đôi 2-pin và có thể lắp ráp trực tiếp không cần Breadboard.
+            <br>3. <strong>Tính toán an toàn dòng điện:</strong> Chân ESP32 chịu dòng sink an toàn &lt; 20mA. Dòng qua LED chỉ ~5.9mA (nhờ trở hạn dòng 220Ω), nút bấm chỉ ~0.07mA (nhờ trở kéo nội 45kΩ), PIR chỉ ~0.05mA nên hoàn toàn an toàn. Riêng các tải nặng như còi (30-50mA) và cuộn hút Relay (70mA) được nhóm tách riêng đưa về GND thật và nguồn VIN 5V để không làm sụt áp chip ạ!"
           </div>
         </div>
       </div>
