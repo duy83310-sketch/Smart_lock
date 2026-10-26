@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Khóa cửa thông minh ESP32</title>
+<style>
+  :root{
+    --bg:#ffffff; --fg:#1d2330; --muted:#5b6475; --line:#d9dee7;
+    --soft:#f4f6fa; --accent:#2f5bd3; --ok:#1f8a4c; --warn:#b4570b; --err:#c0392b;
+    --code-bg:#f6f8fa;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);
+    font:15.5px/1.65 "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+  header.cover{border-bottom:3px solid var(--accent);padding-bottom:20px;margin-bottom:28px}
+  header.cover .tag{color:var(--accent);font-weight:600;letter-spacing:.04em;text-transform:uppercase;font-size:13px}
+  h1{font-size:30px;line-height:1.25;margin:6px 0 8px}
+  header.cover p{color:var(--muted);margin:0}
+  h2{font-size:22px;margin:40px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h3{font-size:17px;margin:24px 0 8px}
+  h4{font-size:15.5px;margin:18px 0 6px}
+  table{width:100%;border-collapse:collapse;margin:12px 0 16px;font-size:14.5px}
+  th,td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
+  th{background:var(--soft)}
+  code{font-family:"JetBrains Mono",Consolas,monospace;font-size:13px;background:var(--code-bg);
+    padding:1px 5px;border-radius:4px}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:14px;
+    overflow-x:auto;font-size:12.5px;line-height:1.5}
+  pre code{background:none;padding:0}
+  .note,.warn,.tip{border-left:4px solid;padding:10px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+  .note{border-color:var(--accent);background:#eef3ff}
+  .warn{border-color:var(--err);background:#fdf0ee}
+  .tip{border-color:var(--ok);background:#ecf8f1}
+  .note ul,.warn ul,.tip ul{margin:6px 0;padding-left:20px}
+  .toc{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:14px 22px}
+  .toc ol{margin:6px 0;padding-left:20px;columns:2;column-gap:32px}
+  .toc a{color:var(--accent);text-decoration:none}
+  figure{margin:16px 0;text-align:center}
+  figure svg{max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+  figure img{max-width:100%;border:1px solid var(--line);border-radius:10px}
+  figcaption{color:var(--muted);font-size:13.5px;margin-top:6px}
+  .shots{display:grid;grid-template-columns:1fr 2fr;gap:14px;align-items:start}
+  .flow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px;margin:16px 0}
+  .flow .box{border:2px solid var(--accent);border-radius:10px;padding:10px 14px;text-align:center;
+    min-width:130px;background:#fff;font-size:14px}
+  .flow .box b{display:block}
+  .flow .arrow{color:var(--muted);font-size:22px}
+  .step{border:1px solid var(--line);border-radius:12px;padding:6px 18px 12px;margin:16px 0;background:#fff}
+  .step h4{display:flex;align-items:center;gap:10px}
+  .step .num{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;
+    background:var(--accent);color:#fff;font-size:14px;flex:none}
+  .step .check{background:#ecf8f1;border-radius:8px;padding:8px 12px;font-size:14px}
+  ol.steps li,ul li{margin:4px 0}
+  .printbtn{position:fixed;right:16px;bottom:16px;background:var(--accent);color:#fff;border:none;
+    border-radius:8px;padding:10px 16px;font-size:14px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+  .pill{display:inline-block;padding:0 8px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+  .pill.ok{background:#d8f2e3;color:var(--ok)} .pill.opt{background:#fff1dc;color:var(--warn)}
+  .pill.no{background:#eceef2;color:var(--muted)}
+  footer{margin-top:48px;color:var(--muted);font-size:13px;border-top:1px solid var(--line);padding-top:12px}
+  @media (max-width:640px){ .toc ol{columns:1} h1{font-size:24px} .shots{grid-template-columns:1fr} }
+  @media print{
+    .printbtn{display:none}
+    body{font-size:11.5pt}
+    .wrap{max-width:none;padding:0}
+    h2,h3,h4{break-after:avoid;page-break-after:avoid}
+    tr,figure,.note,.warn,.tip,.step{break-inside:avoid}
+    pre{white-space:pre-wrap;word-break:break-word}
+    a{color:inherit;text-decoration:none}
+    #appendix{break-before:page}
+  }
+  @page{size:A4;margin:16mm 14mm}
+</style>
+</head>
+<body>
+<button class="printbtn" onclick="window.print()">🖨️ In / Lưu PDF</button>
+<div class="wrap">
+
+<header class="cover">
+  <div class="tag">Đề tài IoT · ESP32</div>
+  <h1>Khóa cửa thông minh kết hợp nhập mật khẩu (PIN Code) trên Web</h1>
+  <p>Hướng dẫn từ A đến Z: linh kiện, kỹ thuật nối dây trực tiếp, cắm dây từng bước, cài đặt, nạp code, giải thích mã nguồn, bảo mật, kiểm thử.</p>
+</header>
+
+<nav class="toc">
+  <b>Mục lục</b>
+  <ol>
+    <li><a href="#gioi-thieu">Giới thiệu đề tài</a></li>
+    <li><a href="#nguyen-ly">Nguyên lý hoạt động</a></li>
+    <li><a href="#linh-kien">Linh kiện</a></li>
+    <li><a href="#ky-thuat">Kỹ thuật nối dây</a></li>
+    <li><a href="#so-do">Sơ đồ chân &amp; bảng nối dây</a></li>
+    <li><a href="#phan-mem">Cài đặt phần mềm &amp; nạp code</a></li>
+    <li><a href="#cam-day">Cắm dây từng bước</a></li>
+    <li><a href="#su-dung">Hướng dẫn sử dụng</a></li>
+    <li><a href="#giai-thich">Giải thích mã nguồn</a></li>
+    <li><a href="#bao-mat">Bảo mật &amp; xử lý chuỗi</a></li>
+    <li><a href="#kiem-thu">Kịch bản kiểm thử</a></li>
+    <li><a href="#loi">Xử lý lỗi thường gặp</a></li>
+    <li><a href="#phat-trien">Hướng phát triển</a></li>
+    <li><a href="#appendix">Phụ lục: mã nguồn đầy đủ</a></li>
+  </ol>
+</nav>
+
+<!-- 1 -->
+<h2 id="gioi-thieu">1. Giới thiệu đề tài</h2>
+<p>Hệ thống dùng vi điều khiển <b>ESP32</b> làm Web Server. ESP32 tự phát WiFi riêng. Người dùng kết nối điện thoại vào WiFi này và mở trình duyệt để thấy <b>màn hình trạng thái</b> và <b>bàn phím số</b>. Khi nhập đúng mã PIN, ESP32 kích <b>Relay</b> (đóng vai trò chốt khóa điện) để mở khóa, và <b>LED xanh</b> sáng. Khi nhập sai, <b>LED đỏ</b> nháy. Nếu nhập sai nhiều lần hoặc có người đứng lâu trước cửa khi đang khóa, hệ thống <b>báo động</b> (còi kêu, đèn nháy, relay 2 bật).</p>
+<div class="note"><b>Điều chỉnh theo linh kiện thực tế:</b>
+<ul>
+  <li><b>Không có màn hình OLED</b>: màn hình được chuyển lên <b>Web</b>. Trang chính có một màn hình ảo, còn trang <code>/screen</code> hiển thị toàn màn hình để gắn điện thoại hoặc tablet cũ ở cửa.</li>
+  <li><b>Còi buzzer</b>: kêu <b>"bíp - bíp"</b> khi báo động. Kèm theo LED đỏ + LED vàng nháy nhanh và relay kênh 2 bật.</li>
+</ul></div>
+<h3>Mục tiêu</h3>
+<ul>
+  <li>Xây dựng Web Server trên ESP32 với giao diện bàn phím số và màn hình trạng thái cập nhật mỗi giây.</li>
+  <li>Điều khiển cơ cấu chấp hành (Relay) và đèn báo trạng thái (LED xanh/đỏ).</li>
+  <li>Áp dụng <b>bảo mật</b>: kiểm tra dữ liệu đầu vào, so sánh chuỗi an toàn, chống dò mật khẩu, báo động, ghi nhật ký.</li>
+  <li>Cho phép đổi PIN và lưu PIN vào bộ nhớ flash, mất điện không mất.</li>
+</ul>
+
+<!-- 2 -->
+<h2 id="nguyen-ly">2. Nguyên lý hoạt động</h2>
+<div class="flow">
+  <div class="box"><b>📱 Điện thoại</b>Bàn phím + màn hình ảo</div>
+  <div class="arrow">⇄</div>
+  <div class="box"><b>📶 WiFi AP</b>SmartLock-ESP32</div>
+  <div class="arrow">⇄</div>
+  <div class="box"><b>🧠 ESP32</b>Web Server<br>kiểm tra PIN</div>
+  <div class="arrow">→</div>
+  <div class="box"><b>🔌 Relay CH1</b>Chốt khóa</div>
+  <div class="box"><b>🚨 Relay CH2</b>Đầu ra báo động</div>
+  <div class="box"><b>💡 LED xanh / đỏ</b>Báo trạng thái</div>
+</div>
+<p style="text-align:center;color:var(--muted);font-size:14px">Tùy chọn thêm: LED vàng · còi buzzer · nút EXIT/LOCK · cảm biến người (PIR) · điện thoại thứ 2 làm màn hình ở cửa (<code>/screen</code>)</p>
+
+<h3>Các tình huống hoạt động</h3>
+<table>
+  <tr><th>Tình huống</th><th>Hệ thống phản ứng</th></tr>
+  <tr><td>Khởi động</td><td>Đọc PIN từ flash (mặc định <code>1234</code>), đặt các chân GND phụ về LOW, khóa cửa (relay 1 ngắt, LED đỏ sáng) và phát WiFi.</td></tr>
+  <tr><td>Nhập <b>đúng</b> PIN</td><td>Relay 1 đóng (kêu "tách"), LED xanh nháy 3 lần rồi sáng, màn hình web hiện <code>OPEN</code> và "Mời vào!".</td></tr>
+  <tr><td>Nhập <b>sai</b> PIN</td><td>LED đỏ nháy 3 lần, màn hình hiện "Sai PIN! 1/3".</td></tr>
+  <tr><td>Sai PIN <b>3 lần</b></td><td>Tạm khóa 30 giây, không nhận PIN kể cả PIN đúng. Báo động 15 giây: còi kêu "bíp - bíp", LED đỏ + LED vàng nháy nhanh, relay 2 bật, màn hình hiện <code>! ALARM !</code> nhấp nháy.</td></tr>
+  <tr><td>Tự khóa lại</td><td>Sau 5 giây kể từ lúc mở khóa.</td></tr>
+  <tr><td>Có người trước cửa <span class="pill opt">PIR</span></td><td>LED vàng sáng, màn hình hiện "Mời nhập mã PIN...". Nếu cửa đang khóa mà người đứng liên tục quá <code>PIR_ALARM_DELAY_MS</code> (mặc định 8 giây) thì báo động.</td></tr>
+  <tr><td>Bấm nút <b>EXIT</b> <span class="pill opt">nút</span></td><td>Mở khóa từ trong nhà, không cần PIN (đồng thời tắt báo động).</td></tr>
+  <tr><td>Bấm nút <b>LOCK</b> <span class="pill opt">nút</span></td><td>Khóa ngay và <b>tắt báo động</b>.</td></tr>
+</table>
+
+<!-- 3 -->
+<h2 id="linh-kien">3. Linh kiện</h2>
+<table>
+  <tr><th>Linh kiện</th><th>Mức</th><th>SL</th><th>Vai trò</th></tr>
+  <tr><td>Bảng phát triển ESP32 + cáp Micro USB</td><td><span class="pill ok">bắt buộc</span></td><td>1</td><td>Bộ xử lý, phát WiFi, chạy Web Server</td></tr>
+  <tr><td>Mô-đun Relay 2 kênh 5V</td><td><span class="pill ok">bắt buộc</span></td><td>1</td><td>CH1: chốt khóa · CH2: đầu ra báo động</td></tr>
+  <tr><td>LED đỏ</td><td><span class="pill ok">bắt buộc</span></td><td>1</td><td>Đang khóa, sai PIN, báo động</td></tr>
+  <tr><td>LED xanh</td><td><span class="pill ok">bắt buộc</span></td><td>1</td><td>Đã mở khóa, PIN đúng</td></tr>
+  <tr><td>Điện trở 220Ω</td><td><span class="pill ok">bắt buộc</span></td><td>2–3</td><td>Hạn dòng cho LED, mỗi LED một con</td></tr>
+  <tr><td>Dây Dupont F-F</td><td><span class="pill ok">bắt buộc</span></td><td>8–10</td><td>Nối chân ESP32 với module và chân linh kiện</td></tr>
+  <tr><td>LED vàng</td><td><span class="pill opt">tùy chọn</span></td><td>1</td><td>Có người trước cửa, đang tạm khóa</td></tr>
+  <tr><td>Nút nhấn</td><td><span class="pill opt">tùy chọn</span></td><td>2</td><td>EXIT (mở từ trong nhà), LOCK (khóa + tắt báo động)</td></tr>
+  <tr><td>Còi buzzer (loại nhỏ, ≤ 20mA)</td><td><span class="pill opt">tùy chọn</span></td><td>1</td><td>Kêu "bíp - bíp" khi báo động (nối D25)</td></tr>
+  <tr><td>PIR HC-SR501</td><td><span class="pill opt">tùy chọn</span></td><td>1</td><td>Phát hiện người; đứng lâu trước cửa đang khóa thì báo động</td></tr>
+  <tr><td>Dây Dupont F-M</td><td><span class="pill opt">tùy chọn</span></td><td>tối đa 10</td><td>Cắt thành "dây 1 đầu cái" cho các phần tùy chọn</td></tr>
+  <tr><td>Kéo, băng dính điện, bìa carton</td><td><span class="pill ok">dụng cụ</span></td><td>—</td><td>Cắt và tuốt dây, cách điện mối nối, gắn mô hình</td></tr>
+  <tr><td>DHT11, quang trở, chiết áp, điện trở 1k/10k, dây M-M</td><td><span class="pill no">không dùng</span></td><td>—</td><td>Xem Hướng phát triển</td></tr>
+</table>
+<div class="tip"><b>Gợi ý:</b> chỉ cần phần <b>bắt buộc</b> (ESP32 + Relay + LED xanh + LED đỏ) là đã đủ yêu cầu đề bài, và <b>không phải cắt dây nào</b>. Các phần tùy chọn làm hệ thống "xịn" hơn nhưng phải cắt và nối dây thủ công.</div>
+
+<!-- 4 -->
+<h2 id="ky-thuat">4. Kỹ thuật nối dây</h2>
+<p>Khi nối dây có 3 điểm cần lưu ý, và đây là cách xử lý từng cái:</p>
+<table>
+  <tr><th>Vấn đề</th><th>Cách giải quyết</th></tr>
+  <tr><td>ESP32 chỉ có <b>2 chân GND</b>, trong khi rất nhiều thứ cần nối GND</td><td><b>GND phụ</b>: dùng một GPIO đặt mức LOW làm GND (mục 4.1)</td></tr>
+  <tr><td>LED cần điện trở nối tiếp, nhưng không có chỗ cắm</td><td><b>Xoắn chân điện trở</b> vào chân dài của LED (mục 4.2)</td></tr>
+  <tr><td>Chân ESP32 và chân module đều là chân đực</td><td>Dùng dây <b>F-F</b>. Với chân linh kiện rời thì cắm chân vào đầu cái, hoặc dùng <b>dây 1 đầu cái</b> (mục 4.3)</td></tr>
+</table>
+
+<h3>4.1 "GND phụ": dùng GPIO làm chân GND</h3>
+<p>Khi một GPIO được đặt <code>OUTPUT</code> + <code>LOW</code>, bên trong chip có một transistor nối chân đó xuống 0V. Nhờ vậy chân này hoạt động như một chân GND nhỏ, cho dòng điện chảy vào (sink) an toàn tới khoảng <b>20mA</b>.</p>
+<pre><code>const int GND_PINS[] = { 22, 19, 16, 33, 14, 4 };   // các chân làm GND phụ
+for (int pin : GND_PINS) { pinMode(pin, OUTPUT); digitalWrite(pin, LOW); }</code></pre>
+<table>
+  <tr><th>Thiết bị</th><th>Dòng điện</th><th>Dùng GND phụ được?</th></tr>
+  <tr><td>LED + điện trở 220Ω ở 3.3V</td><td>≈ (3.3 − 2.0) / 220 ≈ <b>6mA</b></td><td>✅ Được</td></tr>
+  <tr><td>Nút nhấn (dùng pull-up bên trong ~45kΩ)</td><td>≈ <b>0.07mA</b></td><td>✅ Được</td></tr>
+  <tr><td>PIR HC-SR501</td><td>&lt; <b>0.1mA</b></td><td>✅ Được</td></tr>
+  <tr><td>Còi buzzer (loại nhỏ)</td><td>≈ 10–20mA</td><td>⚠️ Nên dùng GND thật</td></tr>
+  <tr><td>Relay (cuộn hút)</td><td>≈ 70mA mỗi kênh</td><td>❌ Không. Dùng GND thật</td></tr>
+</table>
+<div class="warn"><b>⚠️ Bắt buộc phải nạp code mới trước.</b> Chân GND phụ chỉ là GND khi code đã đặt nó về LOW. Nếu board đang chạy code cũ, LED chỉ không sáng chứ không hỏng gì.</div>
+
+<h3>4.2 Nối LED + điện trở</h3>
+<figure>
+<svg viewBox="0 0 900 220" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial,sans-serif" font-size="13">
+  <rect x="30" y="30" width="110" height="160" rx="10" fill="#1f3b73"/>
+  <text x="85" y="56" text-anchor="middle" fill="#fff" font-weight="700">ESP32</text>
+  <circle cx="140" cy="90" r="6" fill="#f5c542"/><text x="122" y="94" text-anchor="end" fill="#fff">D23</text>
+  <circle cx="140" cy="160" r="6" fill="#f5c542"/><text x="122" y="164" text-anchor="end" fill="#fff">D22</text>
+
+  <line x1="146" y1="90" x2="350" y2="90" stroke="#e74c3c" stroke-width="4"/>
+  <rect x="340" y="80" width="22" height="20" rx="3" fill="#333"/>
+  <text x="262" y="74" text-anchor="middle" fill="#c0392b" font-size="12">Dây F-F: 1 đầu cắm D23, 1 đầu cắm chân điện trở</text>
+
+  <line x1="362" y1="90" x2="390" y2="90" stroke="#999" stroke-width="2"/>
+  <rect x="390" y="80" width="80" height="20" rx="6" fill="#e9d8a6" stroke="#8a6d1f"/>
+  <rect x="405" y="80" width="6" height="20" fill="#c0392b"/><rect x="418" y="80" width="6" height="20" fill="#c0392b"/><rect x="431" y="80" width="6" height="20" fill="#6d4c41"/>
+  <text x="430" y="120" text-anchor="middle" font-size="12">Điện trở 220Ω</text>
+  <line x1="470" y1="90" x2="520" y2="90" stroke="#999" stroke-width="2"/>
+
+  <path d="M520 90 q5 -10 10 0 q5 10 10 0 q5 -10 10 0 q5 10 10 0" fill="none" stroke="#b07a00" stroke-width="3"/>
+  <rect x="515" y="78" width="50" height="24" rx="4" fill="none" stroke="#555" stroke-dasharray="4 3"/>
+  <text x="540" y="70" text-anchor="middle" font-size="12" fill="#555">xoắn chặt + băng dính</text>
+
+  <line x1="565" y1="90" x2="650" y2="90" stroke="#999" stroke-width="2"/>
+  <line x1="650" y1="90" x2="690" y2="105" stroke="#999" stroke-width="2"/>
+  <circle cx="710" cy="125" r="26" fill="#e74c3c" stroke="#8e2b20" stroke-width="2"/>
+  <text x="710" y="130" text-anchor="middle" fill="#fff" font-weight="700">LED</text>
+  <text x="760" y="95" font-size="12">chân <tspan font-weight="700">dài</tspan> (+)</text>
+  <line x1="690" y1="145" x2="650" y2="160" stroke="#999" stroke-width="2"/>
+  <text x="760" y="165" font-size="12">chân <tspan font-weight="700">ngắn</tspan> (−)</text>
+
+  <rect x="628" y="150" width="22" height="20" rx="3" fill="#333"/>
+  <line x1="146" y1="160" x2="628" y2="160" stroke="#7f8c8d" stroke-width="4"/>
+  <text x="390" y="185" text-anchor="middle" fill="#555" font-size="12">Dây F-F: 1 đầu cắm D22 (GND phụ), 1 đầu cắm thẳng vào chân ngắn LED</text>
+</svg>
+<figcaption>Hình 1. Nối LED đỏ: D23 → điện trở → LED → D22 (GND phụ). Ô đen nhỏ là đầu cái của dây Dupont.</figcaption>
+</figure>
+<ol class="steps">
+  <li>Xác định chân LED: <b>chân dài là (+)</b>. Nếu chân đã bị cắt bằng nhau, nhìn vào trong bóng LED: cực (−) là miếng kim loại <b>to hơn</b>, và mép đế phía (−) bị vạt phẳng.</li>
+  <li>Lấy điện trở 220Ω (vạch màu <b>đỏ-đỏ-nâu</b>). Điện trở không có chiều. Quấn một chân điện trở quanh <b>chân dài LED</b> khoảng 4–5 vòng, sát thân LED, rồi bóp chặt.</li>
+  <li>Quấn băng dính điện quanh mối xoắn để mối nối không chạm vào dây khác.</li>
+  <li>Cắm chân còn lại của điện trở vào <b>đầu cái</b> của một dây F-F. Đầu cái kia cắm vào chân GPIO tín hiệu (ví dụ D23).</li>
+  <li>Cắm <b>chân ngắn LED</b> vào đầu cái của dây F-F thứ hai. Đầu cái kia cắm vào chân GND phụ (ví dụ D22).</li>
+  <li>Nếu đầu cái bị lỏng (chân linh kiện nhỏ hơn chân header), hãy gập đôi đầu chân linh kiện rồi mới cắm vào cho chặt.</li>
+</ol>
+
+<h3>4.3 "Dây 1 đầu cái" và dây chữ Y <span class="pill opt">chỉ cần cho phần tùy chọn</span></h3>
+<p>Mỗi kết nối bằng dây F-F tốn 1 dây. Bộ kit chỉ có <b>10 dây F-F</b>, đủ cho phần bắt buộc (8 dây). Muốn lắp thêm phần tùy chọn thì phải dùng thêm dây F-M. Tuy nhiên dây F-M có một đầu đực, mà đầu đực thì không cắm được vào chân ESP32. Vì vậy ta <b>cắt bỏ đầu đực</b> để có "dây 1 đầu cái":</p>
+<pre><code>Dây F-M:      [CÁI]════════════════════[ĐỰC]
+Cắt sát đầu đực:  [CÁI]═══════════════════╪  ✂
+Tuốt 1.5cm vỏ:    [CÁI]═════════════════~~~~   ← lõi đồng
+                    │                      └── quấn vào chân linh kiện + băng dính
+                    └── cắm vào chân ESP32</code></pre>
+<ol class="steps">
+  <li><b>Cắt</b>: dùng kéo cắt bỏ đầu đực, cắt sát đầu để giữ dây dài nhất.</li>
+  <li><b>Tuốt vỏ</b>: kẹp dây giữa 2 lưỡi kéo, bóp <i>nhẹ</i> rồi xoay một vòng để cắt vỏ nhựa nhưng không đứt lõi. Sau đó kéo vỏ ra khoảng 1.5cm. Xoắn các sợi đồng nhỏ lại thành một sợi.</li>
+  <li><b>Nối</b>: quấn lõi đồng quanh chân linh kiện (LED, điện trở, nút) 4–5 vòng, rồi quấn băng dính. Nếu có mỏ hàn thì hàn sẽ chắc nhất.</li>
+</ol>
+<p><b>Dây chữ Y</b> dùng khi một chân ESP32 phải cấp cho 2 thiết bị. Trường hợp này chỉ xảy ra với chân <b>VIN</b> khi lắp PIR, vì cả Relay và PIR đều cần 5V:</p>
+<pre><code>Cắt đôi 2 dây F-F → được 4 đoạn có đầu cái. Lấy 3 đoạn, tuốt vỏ, xoắn chung 3 lõi đồng, quấn băng dính:
+
+   [CÁI] ──────┐
+               ├══ (mối xoắn + băng dính)
+   [CÁI] ──────┤
+   [CÁI] ──────┘
+   → 1 đầu cắm VIN, 1 đầu cắm Relay VCC, 1 đầu cắm PIR VCC</code></pre>
+
+<h3>4.4 Nút nhấn 4 chân</h3>
+<figure>
+<svg viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial,sans-serif" font-size="13">
+  <rect x="30" y="30" width="110" height="150" rx="10" fill="#1f3b73"/>
+  <text x="85" y="56" text-anchor="middle" fill="#fff" font-weight="700">ESP32</text>
+  <circle cx="140" cy="80" r="6" fill="#f5c542"/><text x="122" y="84" text-anchor="end" fill="#fff">D32</text>
+  <circle cx="140" cy="150" r="6" fill="#f5c542"/><text x="122" y="154" text-anchor="end" fill="#fff">D33</text>
+  <rect x="420" y="60" width="110" height="110" rx="8" fill="#444"/>
+  <circle cx="475" cy="115" r="30" fill="#222" stroke="#666"/>
+  <rect x="404" y="72" width="16" height="6" fill="#aaa"/><rect x="530" y="72" width="16" height="6" fill="#aaa"/>
+  <rect x="404" y="152" width="16" height="6" fill="#aaa"/><rect x="530" y="152" width="16" height="6" fill="#aaa"/>
+  <line x1="146" y1="80" x2="380" y2="80" stroke="#8e44ad" stroke-width="4"/><rect x="380" y="70" width="24" height="20" rx="3" fill="#333"/>
+  <line x1="146" y1="150" x2="250" y2="150" stroke="#7f8c8d" stroke-width="4"/>
+  <path d="M250 150 L250 190 L600 190 L600 155 L570 155" fill="none" stroke="#7f8c8d" stroke-width="4"/>
+  <rect x="546" y="145" width="24" height="20" rx="3" fill="#333"/>
+  <text x="300" y="68" text-anchor="middle" fill="#8e44ad" font-size="12">chân trên-trái → D32</text>
+  <text x="620" y="150" font-size="12" fill="#555">chân dưới-phải → D33 (GND phụ)</text>
+  <text x="620" y="80" font-size="12" fill="#555">Dùng 2 chân <tspan font-weight="700">chéo nhau</tspan>:</text>
+  <text x="620" y="98" font-size="12" fill="#555">luôn đúng, không cần biết</text>
+  <text x="620" y="116" font-size="12" fill="#555">cặp chân nào nối sẵn bên trong</text>
+</svg>
+<figcaption>Hình 2. Nối nút EXIT: dùng 2 chân chéo nhau, 1 chân nối D32, 1 chân nối D33 (GND phụ)</figcaption>
+</figure>
+<p>Nút nhấn 4 chân có 2 cặp chân được nối sẵn bên trong. Chọn <b>2 chân chéo nhau</b> thì chắc chắn bấm nút là thông mạch. Chân nút ngắn, nên hãy gập chân ra phía ngoài một chút rồi quấn lõi đồng của dây 1 đầu cái vào.</p>
+
+<!-- 5 -->
+<h2 id="so-do">5. Sơ đồ chân &amp; bảng nối dây</h2>
+<h3>5.1 Sơ đồ chân ESP32 DevKit V1 (30 chân)</h3>
+<figure>
+<svg viewBox="0 0 900 690" xmlns="http://www.w3.org/2000/svg" font-family="Segoe UI,Arial,sans-serif" font-size="12.5">
+  <rect x="340" y="20" width="220" height="640" rx="14" fill="#1f3b73"/>
+  <rect x="372" y="34" width="156" height="96" rx="6" fill="#c0c7d4"/>
+  <text x="450" y="80" text-anchor="middle" fill="#1f3b73" font-weight="700" font-size="14">ESP-WROOM-32</text>
+  <text x="450" y="100" text-anchor="middle" fill="#1f3b73" font-size="11">(mặt chip quay lên)</text>
+  <rect x="420" y="648" width="60" height="30" rx="4" fill="#9aa3b2"/>
+  <text x="450" y="668" text-anchor="middle" fill="#1f3b73" font-size="11" font-weight="700">USB</text>
+  <text x="400" y="630" fill="#c9d6f5" font-size="11">EN</text><text x="480" y="630" fill="#c9d6f5" font-size="11">BOOT</text>
+
+  <g fill="#fff">
+    <text x="364" y="156">EN</text><text x="364" y="189">VP</text><text x="364" y="222">VN</text>
+    <text x="364" y="255">D34</text><text x="364" y="288">D35</text><text x="364" y="321">D32</text>
+    <text x="364" y="354">D33</text><text x="364" y="387">D25</text><text x="364" y="420">D26</text>
+    <text x="364" y="453">D27</text><text x="364" y="486">D14</text><text x="364" y="519">D12</text>
+    <text x="364" y="552">D13</text><text x="364" y="585">GND</text><text x="364" y="618">VIN</text>
+  </g>
+  <g fill="#fff" text-anchor="end">
+    <text x="536" y="156">D23</text><text x="536" y="189">D22</text><text x="536" y="222">TX0</text>
+    <text x="536" y="255">RX0</text><text x="536" y="288">D21</text><text x="536" y="321">D19</text>
+    <text x="536" y="354">D18</text><text x="536" y="387">D5</text><text x="536" y="420">TX2</text>
+    <text x="536" y="453">RX2</text><text x="536" y="486">D4</text><text x="536" y="519">D2</text>
+    <text x="536" y="552">D15</text><text x="536" y="585">GND</text><text x="536" y="618">3V3</text>
+  </g>
+  <g fill="#f5c542">
+    <circle cx="352" cy="152" r="5"/><circle cx="352" cy="185" r="5"/><circle cx="352" cy="218" r="5"/><circle cx="352" cy="251" r="5"/><circle cx="352" cy="284" r="5"/>
+    <circle cx="352" cy="317" r="5"/><circle cx="352" cy="350" r="5"/><circle cx="352" cy="383" r="5"/><circle cx="352" cy="416" r="5"/><circle cx="352" cy="449" r="5"/>
+    <circle cx="352" cy="482" r="5"/><circle cx="352" cy="515" r="5"/><circle cx="352" cy="548" r="5"/><circle cx="352" cy="581" r="5"/><circle cx="352" cy="614" r="5"/>
+    <circle cx="548" cy="152" r="5"/><circle cx="548" cy="185" r="5"/><circle cx="548" cy="218" r="5"/><circle cx="548" cy="251" r="5"/><circle cx="548" cy="284" r="5"/>
+    <circle cx="548" cy="317" r="5"/><circle cx="548" cy="350" r="5"/><circle cx="548" cy="383" r="5"/><circle cx="548" cy="416" r="5"/><circle cx="548" cy="449" r="5"/>
+    <circle cx="548" cy="482" r="5"/><circle cx="548" cy="515" r="5"/><circle cx="548" cy="548" r="5"/><circle cx="548" cy="581" r="5"/><circle cx="548" cy="614" r="5"/>
+  </g>
+
+  <g text-anchor="end" font-size="12.5">
+    <line x1="290" y1="383" x2="346" y2="383" stroke="#e67e22" stroke-width="3"/><text x="284" y="387" fill="#e67e22">Còi buzzer (+) (tùy chọn)</text>
+    <line x1="290" y1="284" x2="346" y2="284" stroke="#16a085" stroke-width="3"/><text x="284" y="288" fill="#16a085">PIR · OUT (tùy chọn)</text>
+    <line x1="290" y1="317" x2="346" y2="317" stroke="#8e44ad" stroke-width="3"/><text x="284" y="321" fill="#8e44ad">Nút EXIT · chân 1</text>
+    <line x1="290" y1="350" x2="346" y2="350" stroke="#8e44ad" stroke-width="3" stroke-dasharray="6 3"/><text x="284" y="354" fill="#8e44ad">Nút EXIT · chân 2 (GND phụ)</text>
+    <line x1="290" y1="416" x2="346" y2="416" stroke="#2f5bd3" stroke-width="3"/><text x="284" y="420" fill="#2f5bd3" font-weight="700">Relay · IN1 (chốt khóa)</text>
+    <line x1="290" y1="449" x2="346" y2="449" stroke="#2f5bd3" stroke-width="3"/><text x="284" y="453" fill="#2f5bd3" font-weight="700">Relay · IN2 (báo động)</text>
+    <line x1="290" y1="482" x2="346" y2="482" stroke="#8e44ad" stroke-width="3" stroke-dasharray="6 3"/><text x="284" y="486" fill="#8e44ad">Nút LOCK · chân 2 (GND phụ)</text>
+    <line x1="290" y1="548" x2="346" y2="548" stroke="#8e44ad" stroke-width="3"/><text x="284" y="552" fill="#8e44ad">Nút LOCK · chân 1</text>
+    <line x1="290" y1="581" x2="346" y2="581" stroke="#111" stroke-width="3"/><text x="284" y="585" fill="#111" font-weight="700">Relay · GND</text>
+    <line x1="290" y1="614" x2="346" y2="614" stroke="#c0392b" stroke-width="3"/><text x="284" y="618" fill="#c0392b" font-weight="700">Relay · VCC (5V)</text>
+    <text x="284" y="634" fill="#c0392b" font-size="11">+ PIR VCC qua dây chữ Y (tùy chọn)</text>
+  </g>
+  <g font-size="12.5">
+    <line x1="554" y1="152" x2="610" y2="152" stroke="#e74c3c" stroke-width="3"/><text x="616" y="156" fill="#c0392b" font-weight="700">LED đỏ (+) qua điện trở 220Ω</text>
+    <line x1="554" y1="185" x2="610" y2="185" stroke="#e74c3c" stroke-width="3" stroke-dasharray="6 3"/><text x="616" y="189" fill="#c0392b" font-weight="700">LED đỏ (−) · GND phụ</text>
+    <line x1="554" y1="317" x2="610" y2="317" stroke="#27ae60" stroke-width="3" stroke-dasharray="6 3"/><text x="616" y="321" fill="#1d7a44" font-weight="700">LED xanh (−) · GND phụ</text>
+    <line x1="554" y1="350" x2="610" y2="350" stroke="#27ae60" stroke-width="3"/><text x="616" y="354" fill="#1d7a44" font-weight="700">LED xanh (+) qua điện trở 220Ω</text>
+    <line x1="554" y1="416" x2="610" y2="416" stroke="#d4a017" stroke-width="3"/><text x="616" y="420" fill="#9a7d0a">LED vàng (+) qua 220Ω (tùy chọn)</text>
+    <line x1="554" y1="449" x2="610" y2="449" stroke="#d4a017" stroke-width="3" stroke-dasharray="6 3"/><text x="616" y="453" fill="#9a7d0a">LED vàng (−) · GND phụ</text>
+    <line x1="554" y1="482" x2="610" y2="482" stroke="#16a085" stroke-width="3" stroke-dasharray="6 3"/><text x="616" y="486" fill="#16a085">PIR · GND (GND phụ)</text>
+    <line x1="554" y1="581" x2="610" y2="581" stroke="#e67e22" stroke-width="3"/><text x="616" y="585" fill="#e67e22">Còi buzzer (−)</text>
+  </g>
+  <text x="450" y="14" text-anchor="middle" font-size="12" fill="#555">Nét liền = tín hiệu / nguồn · Nét đứt = GND phụ · Đậm = phần bắt buộc</text>
+</svg>
+<figcaption>Hình 3. Vị trí chân trên ESP32 DevKit V1 30 chân (nhìn từ mặt có chip, cổng USB quay xuống)</figcaption>
+</figure>
+<div class="note"><b>Đọc nhãn chân:</b> trên board, chân GPIO<i>x</i> được in là <code>D<i>x</i></code>. Riêng <b>TX2 = GPIO17 = D17</b> và <b>RX2 = GPIO16 = D16</b>. Một số board in là <code>G17</code>, <code>IO17</code> hoặc chỉ in <code>17</code>. Nếu board của bạn có <b>38 chân</b>, thứ tự chân sẽ khác hình trên. Khi đó hãy <b>luôn cắm theo nhãn in trên board</b>, đừng đếm vị trí.</div>
+<p>Các cặp chân của mỗi LED được chọn <b>nằm sát nhau</b> (D23/D22, D19/D18, D17/D16, D32/D33) để dây đi gọn, dễ nhìn.</p>
+
+<h3>5.2 Bảng nối dây đầy đủ</h3>
+<table>
+  <tr><th>Linh kiện</th><th>Chân linh kiện</th><th>Chân ESP32</th><th>Loại dây</th></tr>
+  <tr><td rowspan="4"><b>Relay 2 kênh</b> <span class="pill ok">bắt buộc</span></td><td>VCC</td><td><b>VIN</b></td><td>F-F</td></tr>
+  <tr><td>GND</td><td><b>GND</b> (cạnh VIN)</td><td>F-F</td></tr>
+  <tr><td>IN1</td><td><b>D26</b></td><td>F-F</td></tr>
+  <tr><td>IN2</td><td><b>D27</b></td><td>F-F</td></tr>
+  <tr><td rowspan="2"><b>LED đỏ</b> <span class="pill ok">bắt buộc</span></td><td>Chân dài (+) qua 220Ω</td><td><b>D23</b></td><td>F-F</td></tr>
+  <tr><td>Chân ngắn (−)</td><td><b>D22</b> (GND phụ)</td><td>F-F</td></tr>
+  <tr><td rowspan="2"><b>LED xanh</b> <span class="pill ok">bắt buộc</span></td><td>Chân dài (+) qua 220Ω</td><td><b>D18</b></td><td>F-F</td></tr>
+  <tr><td>Chân ngắn (−)</td><td><b>D19</b> (GND phụ)</td><td>F-F</td></tr>
+  <tr><td rowspan="2">LED vàng <span class="pill opt">tùy chọn</span></td><td>Chân dài (+) qua 220Ω</td><td><b>D17</b> (TX2)</td><td>1 đầu cái</td></tr>
+  <tr><td>Chân ngắn (−)</td><td><b>D16</b> (RX2, GND phụ)</td><td>1 đầu cái</td></tr>
+  <tr><td rowspan="2">Nút EXIT <span class="pill opt">tùy chọn</span></td><td>Chân 1</td><td><b>D32</b></td><td>1 đầu cái</td></tr>
+  <tr><td>Chân 2 (chéo với chân 1)</td><td><b>D33</b> (GND phụ)</td><td>1 đầu cái</td></tr>
+  <tr><td rowspan="2">Nút LOCK <span class="pill opt">tùy chọn</span></td><td>Chân 1</td><td><b>D13</b></td><td>1 đầu cái</td></tr>
+  <tr><td>Chân 2 (chéo với chân 1)</td><td><b>D14</b> (GND phụ)</td><td>1 đầu cái</td></tr>
+  <tr><td rowspan="2">Còi buzzer <span class="pill opt">tùy chọn</span></td><td>Chân (+)</td><td><b>D25</b></td><td>F-F</td></tr>
+  <tr><td>Chân (−)</td><td><b>GND</b> (cạnh VIN)</td><td>F-F</td></tr>
+  <tr><td rowspan="3">PIR HC-SR501 <span class="pill opt">tùy chọn</span></td><td>VCC</td><td><b>VIN</b> (dùng chung với Relay)</td><td>Dây chữ Y</td></tr>
+  <tr><td>GND</td><td><b>D4</b> (GND phụ)</td><td>F-F</td></tr>
+  <tr><td>OUT</td><td><b>D35</b></td><td>F-F</td></tr>
+</table>
+
+<h3>5.3 Kế hoạch sử dụng dây</h3>
+<table>
+  <tr><th>Phương án</th><th>Gồm</th><th>F-F</th><th>F-M (cắt)</th><th>Cắt dây?</th></tr>
+  <tr><td><b>A. Cơ bản</b></td><td>Relay + LED đỏ + LED xanh</td><td>8</td><td>0</td><td>Không</td></tr>
+  <tr><td><b>A+. Cơ bản + LED vàng</b></td><td>A + LED vàng</td><td>10</td><td>0</td><td>Không</td></tr>
+  <tr><td><b>B. Thêm còi + nút</b></td><td>A + LED vàng + còi + 2 nút</td><td>6 <small>(Relay 4 + còi 2)</small></td><td>10</td><td>Cắt 10 F-M</td></tr>
+  <tr><td><b>C. Đầy đủ</b></td><td>B + PIR</td><td>9 <small>(Relay 3 + còi 2 + PIR 2 + 2 dây cắt làm dây Y)</small></td><td>10</td><td>Cắt 10 F-M + 2 F-F</td></tr>
+</table>
+<p>Quy tắc chung: <b>dây F-F để dành cho module có chân đực</b> (Relay, còi, PIR), còn <b>chân LED và chân nút dùng dây 1 đầu cái</b> (cắt từ F-M). Ở phương án B và C, các LED đỏ/xanh của phương án A cũng được chuyển sang dây 1 đầu cái để nhường dây F-F cho còi và cảm biến. Phương án C dùng vừa hết 9 F-F + 10 F-M. Dây M-M không cần dùng.</p>
+
+<div class="warn"><b>⚠️ An toàn</b>
+<ul>
+  <li><b>Luôn rút cáp USB</b> trước khi cắm, tháo hay xoắn dây.</li>
+  <li>Mọi mối xoắn đều phải <b>quấn băng dính</b>. Hai mối nối trần chạm nhau có thể gây chập mạch.</li>
+  <li>Còi buzzer nối thẳng <b>(+) → D25</b> và <b>(−) → GND thật</b> (không dùng GND phụ).</li>
+  <li>Không dùng GND phụ cho Relay hay còi (dòng quá lớn).</li>
+  <li>Không cắm gì vào các chân TX0/RX0 (dùng cho USB) và D12 (ảnh hưởng quá trình khởi động).</li>
+  <li>Đặt ESP32 và các module lên bìa carton hoặc gỗ, <b>không đặt lên bề mặt kim loại</b>.</li>
+</ul></div>
+
+<!-- 6 -->
+<h2 id="phan-mem">6. Cài đặt phần mềm &amp; nạp code</h2>
+<p>Nên làm bước này <b>trước khi cắm dây</b>, để chắc chắn board và code chạy được và các chân GND phụ đã được đặt về LOW.</p>
+<ol class="steps">
+  <li><b>Cài Arduino IDE 2.x</b> từ trang <code>arduino.cc/en/software</code>.</li>
+  <li><b>Thêm board ESP32:</b> vào <i>File → Preferences</i>. Ở ô <i>Additional boards manager URLs</i>, dán đường dẫn:<br>
+      <code>https://espressif.github.io/arduino-esp32/package_esp32_index.json</code><br>
+      Sau đó vào <i>Tools → Board → Boards Manager</i>, tìm <b>esp32</b> (của <b>Espressif Systems</b>) rồi bấm Install.</li>
+  <li><b>Không cần cài thư viện nào</b>. <code>WiFi</code>, <code>WebServer</code> và <code>Preferences</code> có sẵn trong gói board.</li>
+  <li><b>Driver USB:</b> Windows cần cài <b>CP210x</b> hoặc <b>CH340</b>, tùy chip USB trên board. Linux chạy <code>sudo usermod -aG dialout $USER</code> rồi đăng nhập lại.</li>
+  <li>Lưu mã nguồn ở <a href="#appendix">Phụ lục</a> thành file <code>SmartLock/smartlock.ino</code>. Tên file phải trùng với tên thư mục.</li>
+  <li>Vào <i>Tools → Board</i> và chọn <b>ESP32 Dev Module</b>, rồi chọn đúng cổng ở <i>Tools → Port</i>.</li>
+  <li>Bấm <b>Upload</b>. Nếu hiện lỗi <code>Failed to connect…</code>, hãy <b>giữ nút BOOT</b> cho đến khi thấy chữ <code>Writing…</code>.</li>
+  <li>Mở <i>Serial Monitor</i>, chọn <b>115200 baud</b> rồi bấm nút <b>EN</b>. Màn hình sẽ hiện:
+<pre><code>00:00:00 Khóa cửa (khởi động)
+WiFi: SmartLock-ESP32
+Ban phim:   http://192.168.4.1
+Man hinh:   http://192.168.4.1/screen</code></pre></li>
+  <li>Điện thoại kết nối WiFi <b>SmartLock-ESP32</b> (mật khẩu <b>12345678</b>) và mở <b>http://192.168.4.1</b>. Màn hình ảo hiện <code>LOCKED</code> là code đã chạy.</li>
+</ol>
+<p>Code đã được biên dịch thử trên esp32 core <b>3.3.12</b> (Espressif), không có cảnh báo.</p>
+
+<!-- 7 -->
+<h2 id="cam-day">7. Cắm dây từng bước</h2>
+<p>Lắp lần lượt từng bước. <b>Mỗi bước: rút USB → cắm dây → cắm USB → kiểm tra</b>. Bước nào chưa chạy thì sửa xong mới làm bước tiếp theo. Bước 1–3 là phần bắt buộc, từ bước 4 trở đi là tùy chọn.</p>
+
+<div class="step">
+  <h4><span class="num">0</span> Chuẩn bị</h4>
+  <ul>
+    <li>Đặt ESP32 lên bìa carton, <b>mặt có chip quay lên, cổng USB quay về phía bạn</b>. Khi đó cột chân bên trái và bên phải giống Hình 3.</li>
+    <li>Đọc nhãn in bên cạnh từng chân để chắc chắn, ví dụ tìm chữ <code>D23</code>, <code>D22</code>…</li>
+    <li>Chuẩn bị: dây F-F, 2–3 điện trở 220Ω (đỏ-đỏ-nâu), LED, kéo, băng dính điện.</li>
+    <li>Đã nạp code ở mục 6 và thấy web hiện <code>LOCKED</code>.</li>
+  </ul>
+</div>
+
+<div class="step">
+  <h4><span class="num">1</span> LED đỏ <span class="pill ok">bắt buộc</span></h4>
+  <ol>
+    <li>Xoắn 1 chân điện trở 220Ω vào <b>chân dài</b> của LED đỏ, rồi quấn băng dính (xem Hình 1).</li>
+    <li>Dây F-F số 1: một đầu cắm chân còn lại của điện trở, đầu kia cắm <b>D23</b>.</li>
+    <li>Dây F-F số 2: một đầu cắm <b>chân ngắn</b> LED, đầu kia cắm <b>D22</b>.</li>
+  </ol>
+  <div class="check">✅ <b>Kiểm tra:</b> cắm USB thì LED đỏ sáng. Trên web nhập sai PIN (ví dụ 0000) thì LED đỏ nháy 3 lần.<br>
+  ❌ Không sáng: kiểm tra lại chiều LED (chân dài nối phía điện trở), mối xoắn có chặt không, đầu cái có lỏng không.</div>
+</div>
+
+<div class="step">
+  <h4><span class="num">2</span> LED xanh <span class="pill ok">bắt buộc</span></h4>
+  <ol>
+    <li>Xoắn điện trở 220Ω vào chân dài LED xanh, rồi quấn băng dính.</li>
+    <li>Dây F-F số 3: chân còn lại của điện trở → <b>D18</b>.</li>
+    <li>Dây F-F số 4: chân ngắn LED → <b>D19</b>.</li>
+  </ol>
+  <div class="check">✅ <b>Kiểm tra:</b> nhập <b>1234</b> rồi bấm OK. LED xanh nháy 3 lần rồi sáng, LED đỏ tắt, web hiện <code>OPEN</code>. Sau 5 giây tự khóa lại: LED xanh tắt, LED đỏ sáng.</div>
+</div>
+
+<div class="step">
+  <h4><span class="num">3</span> Relay 2 kênh <span class="pill ok">bắt buộc</span></h4>
+  <p>Trên relay có hàng 4 chân đực, đọc nhãn: <code>GND</code>, <code>IN1</code>, <code>IN2</code>, <code>VCC</code>. Giữ nguyên nắp jumper <code>JD-VCC</code>–<code>VCC</code> ở hàng 3 chân bên cạnh.</p>
+  <table>
+    <tr><th>Dây</th><th>Chân Relay</th><th>Chân ESP32</th></tr>
+    <tr><td>F-F số 5</td><td>VCC</td><td><b>VIN</b> (góc dưới bên trái, cạnh USB)</td></tr>
+    <tr><td>F-F số 6</td><td>GND</td><td><b>GND</b> (ngay trên VIN)</td></tr>
+    <tr><td>F-F số 7</td><td>IN1</td><td><b>D26</b></td></tr>
+    <tr><td>F-F số 8</td><td>IN2</td><td><b>D27</b></td></tr>
+  </table>
+  <div class="check">✅ <b>Kiểm tra:</b> nhập đúng PIN thì relay 1 kêu "tách" và đèn trên relay sáng. Sau 5 giây lại kêu "tách" khi khóa. Nhập sai 3 lần thì relay 2 đóng trong 15 giây và LED đỏ nháy nhanh.<br>
+  ❌ Relay hoạt động ngược (bình thường đóng, mở khóa lại ngắt): đổi <code>RELAY_ACTIVE_LOW = false</code>.<br>
+  🎉 <b>Đến đây là đã đủ yêu cầu đề bài.</b> Đã dùng 8 dây F-F.</div>
+</div>
+
+<div class="step">
+  <h4><span class="num">4</span> LED vàng <span class="pill opt">tùy chọn</span></h4>
+  <ol>
+    <li>Làm 2 dây 1 đầu cái (mục 4.3), hoặc dùng 2 dây F-F còn lại nếu không định lắp còi.</li>
+    <li>Xoắn điện trở vào chân dài LED vàng. Nối chân còn lại của điện trở với <b>D17</b> (TX2).</li>
+    <li>Nối chân ngắn LED với <b>D16</b> (RX2).</li>
+  </ol>
+  <div class="check">✅ <b>Kiểm tra:</b> nhập sai 3 lần thì LED vàng sáng trong suốt 30 giây tạm khóa.</div>
+</div>
+
+<div class="step">
+  <h4><span class="num">5</span> Nút EXIT và LOCK <span class="pill opt">tùy chọn</span></h4>
+  <ol>
+    <li>Làm 4 dây 1 đầu cái.</li>
+    <li>Nút EXIT: một chân → <b>D32</b>, chân <b>chéo đối diện</b> → <b>D33</b> (xem Hình 2).</li>
+    <li>Nút LOCK: một chân → <b>D13</b>, chân chéo đối diện → <b>D14</b>.</li>
+    <li>Quấn băng dính các mối nối. Hai nút nên dán ở mặt "trong nhà" của mô hình.</li>
+  </ol>
+  <div class="check">✅ <b>Kiểm tra:</b> bấm EXIT thì mở khóa (LED xanh). Nhập sai 3 lần cho báo động rồi bấm LOCK thì báo động tắt, cửa khóa.<br>
+  ❌ Bấm không có tác dụng: có thể bạn đã nối 2 chân vốn đã thông nhau sẵn. Hãy chuyển sang 2 chân chéo nhau.</div>
+</div>
+
+<div class="step">
+  <h4><span class="num">6</span> Còi buzzer <span class="pill opt">tùy chọn</span></h4>
+  <table>
+    <tr><th>Dây</th><th>Chân còi</th><th>Chân ESP32</th></tr>
+    <tr><td>F-F</td><td>Chân (+)</td><td><b>D25</b></td></tr>
+    <tr><td>F-F</td><td>Chân (−)</td><td><b>GND</b> (cạnh VIN)</td></tr>
+  </table>
+  <ol>
+    <li>Dùng còi buzzer loại nhỏ (dòng ≤ 20mA). Còi thường có 2 chân: chân dài là (+), chân ngắn là (−); nếu bằng nhau thì nhìn dưới đáy còi có dấu <b>+</b>.</li>
+    <li>Nối chân (+) → <b>D25</b>, chân (−) → <b>GND</b> thật (KHÔNG dùng GND phụ).</li>
+    <li>Trên Wokwi: còi có 2 chân, chân 1 (−) nối GND, chân 2 (+) nối D25.</li>
+  </ol>
+  <div class="check">✅ <b>Kiểm tra:</b> nhập sai PIN 3 lần thì còi kêu "bíp - bíp" trong suốt 15 giây báo động (ngắt quãng). Nếu còi im, đổi chiều còi hoặc kiểm tra dây.</div>
+</div>
+
+<div class="step">
+  <h4><span class="num">7</span> Cảm biến người PIR <span class="pill opt">tùy chọn</span></h4>
+  <ol>
+    <li>Làm <b>dây chữ Y</b> (mục 4.3). Rút dây VCC của relay ra khỏi chân VIN, rồi cắm dây Y vào VIN: 1 nhánh → Relay VCC, 1 nhánh → PIR VCC.</li>
+    <li>PIR GND → <b>D4</b> (GND phụ). PIR OUT → <b>D35</b>. Lật PIR lên, gỡ nắp nhựa trắng ra sẽ thấy tên chân in trên mạch.</li>
+    <li>Trên PIR: vặn biến trở <b>Tx</b> hết ngược chiều kim đồng hồ (giữ tín hiệu khoảng 3 giây). Biến trở <b>Sx</b> chỉnh khoảng cách phát hiện. Jumper đặt ở <b>H</b>.</li>
+    <li>Trong code, <code>USE_PIR</code> mặc định đã <code>true</code> (đổi <code>false</code> nếu không lắp PIR). Thời gian chờ trước khi báo động đặt ở <code>PIR_ALARM_DELAY_MS</code> (mặc định 8000ms = 8 giây).</li>
+  </ol>
+  <div class="check">✅ <b>Kiểm tra:</b> chờ khoảng 60 giây sau khi cấp điện cho PIR ổn định. Vẫy tay trước PIR thì LED vàng sáng, web hiện "Có người trước cửa" và "Mời nhập mã PIN...". Để cửa <b>đang khóa</b>, đứng (hoặc vẫy tay liên tục) trước PIR khoảng 8 giây thì <b>báo động</b>: còi kêu "bíp - bíp", LED đỏ + LED vàng nháy nhanh, relay 2 đóng, Serial in "BÁO ĐỘNG: PIR phát hiện người trước cửa". Muốn thử nhanh, đặt <code>PIR_ALARM_DELAY_MS = 2000</code>.</div>
+</div>
+
+<div class="step">
+  <h4><span class="num">8</span> Hoàn thiện mô hình</h4>
+  <ul>
+    <li>Dán ESP32, relay và các module lên bìa carton bằng băng dính 2 mặt. Bó gọn dây bằng băng dính.</li>
+    <li>Kiểm tra lại lần cuối: <b>không có mối nối trần nào hở hoặc chạm nhau</b>.</li>
+    <li>Mặt ngoài cửa: LED đỏ, LED xanh, LED vàng, PIR. Mặt trong cửa: nút EXIT, LOCK, còi buzzer.</li>
+    <li>Cấp nguồn bằng sạc điện thoại 5V hoặc pin dự phòng qua cổng USB.</li>
+  </ul>
+</div>
+
+<!-- 8 -->
+<h2 id="su-dung">8. Hướng dẫn sử dụng</h2>
+<div class="shots">
+  <figure><img src="data:image/png;base64,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" alt="Giao diện web chính"><figcaption>Hình 4. Trang chính: màn hình ảo + bàn phím</figcaption></figure>
+  <figure><img src="data:image/png;base64,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" alt="Trang /screen"><figcaption>Hình 5. Trang <code>/screen</code>: màn hình toàn trang, thay cho OLED</figcaption></figure>
+</div>
+<ol class="steps">
+  <li>Trên điện thoại, kết nối WiFi <b>SmartLock-ESP32</b> (mật khẩu <b>12345678</b>). Nếu điện thoại báo "không có Internet" thì chọn <i>Vẫn kết nối</i>, và tắt 4G.</li>
+  <li>Mở <b>http://192.168.4.1</b>. Phía trên là <b>màn hình ảo</b> (thay cho OLED), phía dưới là bàn phím.</li>
+  <li>Nhập PIN mặc định <b>1234</b> rồi bấm <b>OK</b>.</li>
+  <li><b>Đổi mã PIN</b>: nhập PIN cũ và PIN mới (4–8 chữ số). <b>Nhật ký</b>: xem 8 sự kiện gần nhất.</li>
+</ol>
+<h3>Màn hình ở cửa (thay cho OLED)</h3>
+<p>Nếu có một điện thoại hoặc tablet cũ, có thể dùng nó làm màn hình gắn ở cửa:</p>
+<ol class="steps">
+  <li>Kết nối thiết bị đó vào WiFi <b>SmartLock-ESP32</b>.</li>
+  <li>Mở <b>http://192.168.4.1/screen</b>. Trang này chỉ có màn hình, chữ to, tự co giãn theo khổ màn hình.</li>
+  <li>Xoay ngang thiết bị, tắt chế độ tự khóa màn hình và cắm sạc.</li>
+</ol>
+<p>Màn hình ảo hiển thị trạng thái khóa (<code>LOCKED</code> / <code>OPEN</code> / <code>WAIT 25s</code> / <code>! ALARM !</code> nhấp nháy), thông báo (sai PIN, mời vào…), có người hay không và báo động. Trang tự cập nhật mỗi giây. Nếu mất kết nối với ESP32, màn hình hiện "MẤT KẾT NỐI".</p>
+
+<h3>Ý nghĩa đèn</h3>
+<table>
+  <tr><th>Trạng thái</th><th>LED đỏ</th><th>LED xanh</th><th>LED vàng</th><th>Còi</th><th>Relay 1</th><th>Relay 2</th><th>Màn hình web</th></tr>
+  <tr><td>Đang khóa</td><td>Sáng</td><td>Tắt</td><td>Tắt</td><td>Tắt</td><td>Ngắt</td><td>Ngắt</td><td>LOCKED</td></tr>
+  <tr><td>PIN đúng / mở khóa</td><td>Tắt</td><td>Nháy 3 lần → sáng</td><td>—</td><td>Tắt</td><td>Đóng</td><td>Ngắt</td><td>OPEN · "Mời vào!"</td></tr>
+  <tr><td>PIN sai</td><td>Nháy 3 lần</td><td>Tắt</td><td>—</td><td>Tắt</td><td>Ngắt</td><td>Ngắt</td><td>"Sai PIN! 1/3"</td></tr>
+  <tr><td>Tạm khóa 30s</td><td>Nháy chậm</td><td>Tắt</td><td>Sáng</td><td>Tắt</td><td>Ngắt</td><td>—</td><td>WAIT 25s</td></tr>
+  <tr><td>Báo động</td><td><b>Nháy nhanh</b></td><td>Tắt</td><td><b>Nháy nhanh</b></td><td><b>Bíp - bíp</b></td><td>Ngắt</td><td><b>Đóng</b></td><td>! ALARM ! (nhấp nháy)</td></tr>
+  <tr><td>Có người <span class="pill opt">PIR</span></td><td>—</td><td>—</td><td>Sáng</td><td>Tắt</td><td>—</td><td>—</td><td>"Mời nhập mã PIN..."</td></tr>
+</table>
+<h3>Cách tắt báo động</h3>
+<ul>
+  <li>Nhập <b>đúng PIN</b> trên web (chỉ được khi không đang trong 30 giây tạm khóa).</li>
+  <li>Bấm nút <b>EXIT</b> (mở cửa) hoặc nút <b>LOCK</b> ở phía trong nhà.</li>
+  <li>Báo động tự tắt sau <b>15 giây</b>.</li>
+  <li>Nút "Khóa ngay" trên web <b>không</b> tắt được báo động. Đây là cố ý: kẻ gian vào được WiFi cũng không tắt được báo động.</li>
+</ul>
+
+<!-- 9 -->
+<h2 id="giai-thich">9. Giải thích mã nguồn</h2>
+<h3>9.1 Cấu trúc chương trình</h3>
+<table>
+  <tr><th>Phần</th><th>Nội dung</th></tr>
+  <tr><td>Khai báo &amp; cấu hình</td><td>WiFi, các chân GPIO, mảng <code>GND_PINS</code>, cờ <code>USE_PIR</code>, <code>RELAY_ACTIVE_LOW</code>, <code>PIR_ALARM_DELAY_MS</code>, các mốc thời gian</td></tr>
+  <tr><td><code>PAGE_HTML</code></td><td>Giao diện web (HTML + CSS + JS) lưu trong flash. Một trang dùng cho cả 2 chế độ: <code>/</code> và <code>/screen</code></td></tr>
+  <tr><td><code>addLog()</code>, <code>showMsg()</code></td><td>Nhật ký vòng 8 dòng; thông báo ngắn hiện trên màn hình web trong 4 giây</td></tr>
+  <tr><td><code>isValidPin()</code>, <code>safeEquals()</code></td><td>Kiểm tra định dạng PIN, so sánh chuỗi an toàn</td></tr>
+  <tr><td><code>lockDoor()</code>, <code>unlockDoor()</code></td><td>Điều khiển relay 1, ghi nhật ký</td></tr>
+  <tr><td><code>startAlarm()</code>, <code>stopAlarm()</code></td><td>Bật/tắt relay 2 và còi</td></tr>
+  <tr><td><code>updateLeds()</code></td><td>Nơi <b>duy nhất</b> quyết định trạng thái 3 LED và còi (qua <code>setBuzzer()</code>) theo các biến trạng thái (gọi trong mỗi vòng <code>loop</code>)</td></tr>
+  <tr><td><code>flashSuccess()</code>, <code>flashFail()</code></td><td>Hiệu ứng nháy LED khi nhập đúng/sai PIN</td></tr>
+  <tr><td><code>readSensors()</code></td><td>Đọc PIR, phát hiện người và báo động khi người đứng lâu trước cửa đang khóa</td></tr>
+  <tr><td><code>pressed()</code>, <code>handleButtons()</code></td><td>Đọc nút nhấn, chống dội 50ms</td></tr>
+  <tr><td><code>handle*()</code></td><td>Các hàm xử lý yêu cầu HTTP</td></tr>
+  <tr><td><code>setup()</code></td><td>Đặt các chân GND phụ về LOW <b>đầu tiên</b>, cấu hình chân, đọc PIN, phát WiFi, đăng ký các đường dẫn</td></tr>
+  <tr><td><code>loop()</code></td><td>Phục vụ web, đọc nút và cảm biến, tự khóa, hết giờ báo động, cập nhật LED. Không dùng <code>delay()</code> dài</td></tr>
+</table>
+
+<h3>9.2 Các API của Web Server</h3>
+<table>
+  <tr><th>Đường dẫn</th><th>Phương thức</th><th>Tham số</th><th>Chức năng</th></tr>
+  <tr><td><code>/</code></td><td>GET</td><td>—</td><td>Màn hình ảo + bàn phím</td></tr>
+  <tr><td><code>/screen</code></td><td>GET</td><td>—</td><td>Chỉ màn hình (thay OLED)</td></tr>
+  <tr><td><code>/status</code></td><td>GET</td><td>—</td><td>JSON: <code>locked, lockout, hasPir, motion, alarm, msg, log[]</code></td></tr>
+  <tr><td><code>/unlock</code></td><td>POST</td><td><code>pin</code></td><td>Kiểm tra PIN và mở khóa</td></tr>
+  <tr><td><code>/lock</code></td><td>POST</td><td>—</td><td>Khóa ngay (không tắt báo động)</td></tr>
+  <tr><td><code>/changepin</code></td><td>POST</td><td><code>old</code>, <code>new</code></td><td>Đổi PIN và lưu vào flash</td></tr>
+</table>
+
+<h3>9.3 Chuyển màn hình OLED lên Web</h3>
+<p>Thay vì vẽ lên OLED, ESP32 đưa toàn bộ trạng thái vào JSON của <code>/status</code>. Trình duyệt hỏi <code>/status</code> mỗi giây và tự vẽ màn hình. Riêng thông báo ngắn (<code>msg</code>) chỉ được gửi trong 4 giây sau khi sự kiện xảy ra:</p>
+<pre><code>bool msgActive = screenMsg.length() &amp;&amp; millis() - screenMsgAt &lt; SCREEN_MSG_MS;
+json += ",\"msg\":\"" + (msgActive ? screenMsg : "") + "\"";</code></pre>
+<p>Phía trình duyệt, cùng một trang HTML sẽ chuyển sang chế độ toàn màn hình khi đường dẫn là <code>/screen</code>:</p>
+<pre><code>if (location.pathname === '/screen') document.body.classList.add('screen-only');
+// CSS: .screen-only .ctrl { display:none }  ·  #big { font-size:22vw }</code></pre>
+
+<h3>9.4 Xử lý mở khóa</h3>
+<pre><code>void handleUnlock() {
+  if (lockoutRemainingSec() &gt; 0) { ... từ chối vì đang tạm khóa ... }
+
+  String pin = server.arg("pin");      // lấy PIN từ body của POST
+  pin.trim();                          // bỏ khoảng trắng thừa
+  if (!isValidPin(pin)) { ... }        // chỉ nhận 4-8 chữ số
+
+  if (safeEquals(pin, currentPin)) {   // so sánh thời gian cố định
+    unlockDoor("PIN trên web");        // relay 1 ON, tắt báo động
+    flashSuccess();                    // LED xanh nháy thay cho còi
+    return;
+  }
+  failCount++;
+  if (failCount &gt;= MAX_FAILS) {        // sai 3 lần
+    lockedOut = true;                  // tạm khóa 30s
+    startAlarm("sai PIN 3 lần");       // relay 2 ON, LED đỏ nháy nhanh
+  }
+  flashFail();                         // LED đỏ nháy thay cho còi
+}</code></pre>
+
+<h3>9.5 Đèn LED và còi</h3>
+<pre><code>void updateLeds() {
+  bool red;
+  if (alarmOn)        red = (millis() / 150) % 2;   // báo động: nháy nhanh
+  else if (inLockout) red = (millis() / 500) % 2;   // tạm khóa: nháy chậm
+  else                red = isLocked;               // khóa: sáng, mở: tắt
+  digitalWrite(PIN_LED_RED, red);
+  digitalWrite(PIN_LED_GREEN, !isLocked);
+  digitalWrite(PIN_LED_YELLOW, alarmOn ? (millis()/150)%2==0 : (motion || inLockout));
+  setBuzzer(alarmOn &amp;&amp; (millis() / 250) % 2 == 0);   // còi kêu "bíp - bíp"
+}</code></pre>
+<p>Chương trình nháy LED và còi bằng <code>millis()</code> chứ không dùng <code>delay()</code>, nên ESP32 vẫn phục vụ web bình thường trong lúc đang báo động. Còi dùng <code>tone()</code> nên chạy được với cả còi chủ động lẫn còi thụ động, và chạy được trên Wokwi.</p>
+
+<h3>9.6 PIR và báo động người đứng trước cửa</h3>
+<pre><code>void readSensors() {
+  bool m = digitalRead(PIN_PIR) == HIGH;
+  if (m &amp;&amp; !motion) { motionSince = millis(); addLog("Phát hiện người trước cửa"); }
+  motion = m;
+
+  if (motion &amp;&amp; isLocked &amp;&amp; !alarmOn &amp;&amp; lockoutRemainingSec() == 0 &amp;&amp;
+      millis() - motionSince &gt;= PIR_ALARM_DELAY_MS) {
+    startAlarm("PIR phát hiện người trước cửa");
+    motionSince = millis();
+  }
+}</code></pre>
+<p><code>PIR_ALARM_DELAY_MS</code> (mặc định <b>8000</b>) là thời gian người phải đứng liên tục trước cửa đang khóa thì mới báo động. Đặt <code>0</code> để báo động ngay khi PIR phát hiện chuyển động. Tự khóa lại chỉ dựa vào thời gian (<code>AUTO_LOCK_MS</code>), không còn phụ thuộc cảm biến cửa.</p>
+
+<!-- 10 -->
+<h2 id="bao-mat">10. Bảo mật &amp; xử lý chuỗi</h2>
+<table>
+  <tr><th>#</th><th>Biện pháp</th><th>Cách làm trong code</th><th>Chống lại</th></tr>
+  <tr><td>1</td><td>Kiểm tra dữ liệu đầu vào</td><td><code>isValidPin()</code>: độ dài 4–8, tất cả ký tự là chữ số (<code>isDigit</code>)</td><td>Dữ liệu rác, chuỗi quá dài, ký tự đặc biệt</td></tr>
+  <tr><td>2</td><td>Chuẩn hóa chuỗi</td><td><code>trim()</code> trước khi so sánh</td><td>Lỗi do khoảng trắng thừa</td></tr>
+  <tr><td>3</td><td>So sánh thời gian cố định</td><td><code>safeEquals()</code> gộp XOR của mọi ký tự, không dừng sớm</td><td>Timing attack (đo thời gian phản hồi để đoán từng ký tự)</td></tr>
+  <tr><td>4</td><td>Giới hạn số lần thử</td><td>Sai 3 lần thì tạm khóa 30 giây và báo động</td><td>Brute-force (thử 0000 → 9999)</td></tr>
+  <tr><td>5</td><td>Gửi PIN bằng POST</td><td>PIN nằm trong body, không nằm trên URL</td><td>Lộ PIN qua lịch sử trình duyệt hoặc log</td></tr>
+  <tr><td>6</td><td>Kiểm tra ở phía server</td><td>PIN đúng chỉ lưu trên ESP32, <code>/status</code> không bao giờ trả về PIN</td><td>Đọc mã nguồn trang web để lấy PIN</td></tr>
+  <tr><td>7</td><td>Đổi PIN cần xác thực</td><td><code>/changepin</code> yêu cầu đúng PIN cũ, lần thất bại được ghi nhật ký</td><td>Người lạ tự ý đổi PIN</td></tr>
+  <tr><td>8</td><td>Phát hiện người lạ</td><td>PIR phát hiện người đứng lâu trước cửa đang khóa thì báo động</td><td>Rình trước cửa, đột nhập</td></tr>
+  <tr><td>9</td><td>Phân quyền tắt báo động</td><td>Chỉ PIN đúng hoặc nút EXIT/LOCK bên trong mới tắt được</td><td>Kẻ gian vào được WiFi rồi tắt báo động</td></tr>
+  <tr><td>10</td><td>Tự khóa lại</td><td>Khóa lại sau 5 giây</td><td>Quên khóa cửa</td></tr>
+  <tr><td>11</td><td>Nhật ký</td><td>Ghi mở/khóa, sai PIN, đổi PIN, báo động, có người</td><td>Truy vết sự cố</td></tr>
+  <tr><td>12</td><td>Mật khẩu WiFi</td><td>WPA2 với <code>AP_PASS</code></td><td>Người lạ truy cập mạng của khóa</td></tr>
+</table>
+<p><b>Ước tính độ an toàn:</b> PIN 4 chữ số có 10.000 tổ hợp. Mỗi 3 lần thử bị chặn 30 giây (kèm báo động), nên để thử hết toàn bộ tổ hợp cần khoảng 10.000 / 3 × 30s ≈ <b>27,8 giờ</b>. Với PIN 6 chữ số, con số này tăng lên khoảng <b>115 ngày</b>.</p>
+<div class="note"><b>Hạn chế (nên nêu trong báo cáo):</b>
+<ul>
+  <li>Dữ liệu truyền qua HTTP không được mã hóa.</li>
+  <li>PIN được lưu dạng chuỗi gốc trong flash.</li>
+  <li>Bộ đếm số lần sai bị xóa khi khởi động lại.</li>
+  <li>Relay chỉ mô phỏng chốt khóa.</li>
+  <li>Các mối nối kém bền hơn so với hàn cố định.</li>
+</ul></div>
+
+<!-- 11 -->
+<h2 id="kiem-thu">11. Kịch bản kiểm thử</h2>
+<table>
+  <tr><th>TC</th><th>Thao tác</th><th>Kết quả mong đợi</th></tr>
+  <tr><td>01</td><td>Cấp nguồn cho ESP32</td><td>LED đỏ sáng, web hiện LOCKED, Serial in ra 2 địa chỉ</td></tr>
+  <tr><td>02</td><td>Nhập <code>1234</code></td><td>"Mở khóa thành công!", relay 1 kêu "tách", LED xanh nháy 3 lần rồi sáng</td></tr>
+  <tr><td>03</td><td>Chờ 5 giây</td><td>Tự khóa lại, LED đỏ sáng</td></tr>
+  <tr><td>04</td><td>Nhập <code>0000</code></td><td>"Sai PIN! Còn 2 lần thử", LED đỏ nháy 3 lần, màn hình hiện "Sai PIN! 1/3"</td></tr>
+  <tr><td>05</td><td>Nhập sai 3 lần liên tiếp</td><td>Tạm khóa 30 giây, LED đỏ nháy nhanh, relay 2 đóng, màn hình hiện "! ALARM !"</td></tr>
+  <tr><td>06</td><td>Trong lúc tạm khóa, nhập đúng PIN</td><td>Bị từ chối: "Thử lại sau …s"</td></tr>
+  <tr><td>07</td><td>Đang báo động, bấm "Khóa ngay" trên web</td><td>Báo động <b>vẫn</b> tiếp tục</td></tr>
+  <tr><td>08</td><td>Mở <code>/screen</code> trên thiết bị thứ 2, nhập PIN trên thiết bị 1</td><td>Màn hình ở thiết bị 2 đổi sang OPEN trong vòng 1 giây</td></tr>
+  <tr><td>09</td><td>Rút điện ESP32 khi đang mở trang web</td><td>Màn hình hiện "MẤT KẾT NỐI"</td></tr>
+  <tr><td>10</td><td>Nhập <code>12</code> hoặc đổi PIN mới thành <code>abcd</code></td><td>Báo PIN không hợp lệ</td></tr>
+  <tr><td>11</td><td>Đổi PIN thành <code>5678</code>, rút điện rồi cắm lại</td><td><code>5678</code> mở được, <code>1234</code> bị từ chối</td></tr>
+  <tr><td>12</td><td>Bấm EXIT / LOCK <span class="pill opt">nút</span></td><td>EXIT mở khóa. LOCK khóa lại và tắt báo động</td></tr>
+  <tr><td>13</td><td>Vẫy tay trước PIR <span class="pill opt">PIR</span></td><td>LED vàng sáng, màn hình hiện "Có người trước cửa" và "Mời nhập mã PIN..."</td></tr>
+  <tr><td>14</td><td>Đang khóa, đứng (hoặc vẫy tay) trước PIR khoảng 8 giây <span class="pill opt">PIR</span></td><td>Báo động: còi kêu "bíp - bíp", LED đỏ + LED vàng nháy nhanh, relay 2 đóng, Serial in "BÁO ĐỘNG: PIR phát hiện người trước cửa"</td></tr>
+  <tr><td>15</td><td>Đang báo động, nhập đúng PIN / bấm EXIT / bấm LOCK <span class="pill opt">PIR</span></td><td>Báo động tắt, còi im</td></tr>
+</table>
+
+<!-- 12 -->
+<h2 id="loi">12. Xử lý lỗi thường gặp</h2>
+<table>
+  <tr><th>Hiện tượng</th><th>Nguyên nhân</th><th>Cách sửa</th></tr>
+  <tr><td>Máy tính không nhận cổng COM / ttyUSB</td><td>Cáp chỉ dùng để sạc, hoặc thiếu driver hay thiếu quyền</td><td>Đổi sang cáp dữ liệu, cài driver CP210x/CH340, hoặc thêm user vào nhóm <code>dialout</code></td></tr>
+  <tr><td><code>Failed to connect to ESP32</code></td><td>Board chưa vào chế độ nạp code</td><td>Giữ nút BOOT trong lúc upload</td></tr>
+  <tr><td>LED không sáng</td><td>Cắm ngược chiều, mối xoắn lỏng, đầu cái lỏng, hoặc chưa nạp code mới (GND phụ chưa về LOW)</td><td>Chân dài nối phía điện trở. Xoắn chặt lại. Gập đôi chân linh kiện trước khi cắm. Nạp lại code</td></tr>
+  <tr><td>LED sáng lúc có lúc không khi chạm vào dây</td><td>Tiếp xúc lỏng</td><td>Xoắn lại, quấn băng dính chặt, cố định dây lên bìa</td></tr>
+  <tr><td>Relay hoạt động ngược</td><td>Module kích ở mức HIGH</td><td>Đổi <code>RELAY_ACTIVE_LOW = false</code></td></tr>
+  <tr><td>Relay không nhả, hoặc đèn trên relay sáng mờ</td><td>Mức 3.3V của ESP32 không đủ để ngắt hẳn optocoupler</td><td>Rút jumper JD-VCC. Nối JD-VCC với 5V (cuộn hút) và VCC với 3V3 (optocoupler)</td></tr>
+  <tr><td>Báo động liên tục vì PIR</td><td>Chưa lắp PIR nhưng <code>USE_PIR = true</code> (chân D35 trôi nổi đọc ngẫu nhiên), hoặc PIR nhạy quá</td><td>Chưa lắp PIR thì đặt <code>USE_PIR = false</code>. Đã lắp thì chờ 60 giây và vặn Tx hết ngược chiều kim đồng hồ</td></tr>
+  <tr><td>Web báo "Có người" liên tục</td><td>PIR đang khởi động, Tx đặt quá lâu, hoặc bật <code>USE_PIR</code> khi chưa lắp PIR</td><td>Chờ 60 giây, vặn Tx hết ngược chiều kim đồng hồ, kiểm tra lại cờ <code>USE_PIR</code></td></tr>
+  <tr><td>Còi không kêu khi báo động</td><td>Còi hỏng, cắm ngược chiều, hoặc chưa nạp code có còi</td><td>Kiểm tra chiều còi ((+) → D25, (−) → GND thật). Thử bằng cách nhập sai PIN 3 lần</td></tr>
+  <tr><td>Bấm nút không có phản ứng</td><td>Nối 2 chân vốn đã thông nhau sẵn</td><td>Dùng 2 chân chéo nhau</td></tr>
+  <tr><td>ESP32 tự khởi động lại khi relay đóng</td><td>Nguồn USB yếu hoặc chập mạch</td><td>Dùng củ sạc 5V/2A. Kiểm tra các mối nối trần</td></tr>
+  <tr><td>Web hiện "MẤT KẾT NỐI"</td><td>Điện thoại rời khỏi WiFi SmartLock, hoặc ESP32 mất nguồn</td><td>Tắt 4G, kết nối lại WiFi, kiểm tra nguồn</td></tr>
+</table>
+
+<!-- 13 -->
+<h2 id="phat-trien">13. Hướng phát triển</h2>
+<ul>
+  <li><b>Âm thanh to hơn:</b> gắn còi hoặc đèn chớp 5V vào relay kênh 2 (COM2 → 5V, NO2 → còi (+), còi (−) → GND). Không cần sửa code.</li>
+  <li><b>Tận dụng linh kiện còn lại:</b> hiển thị nhiệt độ/độ ẩm (DHT11) trên màn hình web; dùng chiết áp để chỉnh thời gian tự khóa.</li>
+  <li><b>Chế độ STA:</b> cho ESP32 vào WiFi nhà bằng <code>WiFi.begin(ssid, pass)</code>.</li>
+  <li><b>Băm PIN:</b> chỉ lưu <code>SHA-256(salt + PIN)</code> bằng thư viện <code>mbedtls</code> có sẵn trên ESP32.</li>
+  <li><b>Mã hóa đường truyền:</b> HTTPS với chứng chỉ tự ký, hoặc MQTT qua TLS.</li>
+  <li><b>Thông báo từ xa:</b> gửi tin nhắn Telegram khi có báo động. <b>Mã OTP</b> dùng một lần cho khách.</li>
+  <li><b>Khóa thật:</b> nối relay kênh 1 với khóa chốt điện 12V (dùng adapter 12V riêng, mắc thêm diode 1N4007).</li>
+</ul>
+
+<!-- Appendix -->
+<h2 id="appendix">Phụ lục: mã nguồn đầy đủ (smartlock.ino)</h2>
+<pre class="full"><code>/*
+ * KHÓA CỬA THÔNG MINH - NHẬP PIN TRÊN WEB (ESP32)
+ *   - Relay kênh 1 : chốt khóa cửa (relay đóng = mở khóa)
+ *   - Relay kênh 2 : đầu ra báo động (bật trong lúc báo động)
+ *   - LED xanh     : đã mở khóa / nháy khi nhập đúng PIN
+ *   - LED đỏ       : đang khóa / nháy khi sai PIN / nháy nhanh khi báo động
+ *   - LED vàng     : có người trước cửa hoặc đang tạm khóa
+ *   - CÒI (buzzer) : kêu ngắt quãng khi báo động
+ *   - 2 nút nhấn   : EXIT mở từ trong nhà, LOCK khóa ngay + tắt báo động
+ *   - PIR HC-SR501 : phát hiện người trước cửa; nếu cửa đang KHÓA mà có người
+ *                    đứng quá PIR_ALARM_DELAY_MS thì BÁO ĐỘNG (còi + đèn + relay 2)
+ *   - Màn hình: hiển thị trên WEB, trang /screen dùng cho điện thoại / tablet gắn ở cửa
+ *
+ * "GND phụ": mỗi LED / nút nhấn / PIR được nối vào một GPIO đặt mức LOW
+ * để làm chân GND riêng (chỉ dùng cho tải dòng nhỏ &lt; 20mA).
+ * Còi nối thẳng vào chân GND thật của ESP32 (tải lớn hơn).
+ *
+ * Không cần cài thêm thư viện. Board: ESP32 Dev Module
+ */
+
+#include &lt;WiFi.h&gt;
+#include &lt;WebServer.h&gt;
+#include &lt;Preferences.h&gt;
+
+// ===== WiFi do ESP32 tự phát =====
+const char* AP_SSID = "SmartLock-ESP32";
+const char* AP_PASS = "12345678";  // tối thiểu 8 ký tự
+
+// ===== Chân kết nối (nhãn in trên board trong ngoặc) =====
+const int PIN_RELAY_LOCK  = 26;  // (D26) Relay IN1
+const int PIN_RELAY_ALARM = 27;  // (D27) Relay IN2
+const int PIN_LED_RED     = 23;  // (D23) LED đỏ (+) qua 220Ω
+const int PIN_LED_GREEN   = 18;  // (D18) LED xanh (+) qua 220Ω
+const int PIN_LED_YELLOW  = 17;  // (TX2) LED vàng (+) qua 220Ω
+const int PIN_BUZZER      = 25;  // (D25) Còi (+)
+const int PIN_BTN_EXIT    = 32;  // (D32) Nút EXIT
+const int PIN_BTN_LOCK    = 13;  // (D13) Nút LOCK
+const int PIN_PIR         = 35;  // (D35) OUT cảm biến PIR
+
+// GND phụ: các chân này luôn ở mức LOW
+const int GND_PINS[] = {
+  22,  // (D22) LED đỏ (−)
+  19,  // (D19) LED xanh (−)
+  16,  // (RX2) LED vàng (−)
+  33,  // (D33) Nút EXIT
+  14,  // (D14) Nút LOCK
+  4,   // (D4)  PIR GND
+};
+
+const bool RELAY_ACTIVE_LOW = true;   // đa số module relay kích mức LOW
+const bool USE_PIR          = true;   // đổi thành false nếu không lắp PIR
+
+// ===== Thông số =====
+const char* DEFAULT_PIN = "1234";
+const int MAX_FAILS                  = 3;
+const unsigned long LOCKOUT_MS       = 30000;
+const unsigned long AUTO_LOCK_MS     = 5000;
+const unsigned long ALARM_MS         = 15000;
+const unsigned long SCREEN_MSG_MS    = 4000;
+// Cửa đang khóa mà có người đứng trước cửa liên tục quá thời gian này -&gt; báo động
+// (đặt 0 để báo động ngay khi PIR phát hiện chuyển động)
+const unsigned long PIR_ALARM_DELAY_MS = 8000;
+const int BUZZER_FREQ                = 2000;  // Hz
+
+WebServer server(80);
+Preferences prefs;
+
+// ===== Trạng thái =====
+String currentPin;
+bool isLocked = true;
+unsigned long unlockedAt = 0;
+int failCount = 0;
+bool lockedOut = false;
+unsigned long lockoutStart = 0;
+bool alarmOn = false;
+unsigned long alarmStart = 0;
+bool motion = false;
+unsigned long motionSince = 0;
+bool buzzerOn = false;
+
+String screenMsg;
+unsigned long screenMsgAt = 0;
+
+struct Button {
+  int pin;
+  bool last;
+  unsigned long changedAt;
+};
+Button btnExit = {PIN_BTN_EXIT, HIGH, 0};
+Button btnLock = {PIN_BTN_LOCK, HIGH, 0};
+
+// ===== Nhật ký sự kiện (8 dòng gần nhất) =====
+const int LOG_SIZE = 8;
+String logs[LOG_SIZE];
+int logCount = 0;
+
+// ================= GIAO DIỆN WEB =================
+// Một trang dùng cho 2 chế độ: "/" = màn hình + bàn phím, "/screen" = chỉ màn hình
+const char PAGE_HTML[] PROGMEM = R"rawliteral(
+&lt;!DOCTYPE html&gt;
+&lt;html lang="vi"&gt;
+&lt;head&gt;
+&lt;meta charset="UTF-8"&gt;
+&lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+&lt;title&gt;Smart Lock&lt;/title&gt;
+&lt;style&gt;
+  body{font-family:sans-serif;background:#1e1e2e;color:#fff;text-align:center;margin:0;padding:16px}
+  .screen{background:#000;border:6px solid #2a2a3a;border-radius:14px;max-width:340px;margin:0 auto 14px;
+    padding:12px 14px;font-family:monospace;color:#7fd3ff;text-align:left}
+  .row{display:flex;justify-content:space-between;font-size:13px}
+  .line{border-top:1px solid #1f4a66;margin:6px 0}
+  #big{font-size:34px;font-weight:bold;text-align:center;margin:10px 0;letter-spacing:2px}
+  #smsg{min-height:20px;text-align:center;font-size:15px;color:#fff}
+  .c-red{color:#ff5c5c}.c-green{color:#4cd964}.c-yellow{color:#ffcc00}
+  .blink{animation:bl .4s steps(1) infinite}
+  @keyframes bl{50%{opacity:0}}
+  #dots{font-size:32px;letter-spacing:8px;height:44px;margin:6px 0}
+  .pad{display:grid;grid-template-columns:repeat(3,76px);gap:12px;justify-content:center}
+  .pad button{height:68px;font-size:26px;border:none;border-radius:50%;background:#33334d;color:#fff}
+  .pad button:active{background:#55557a}
+  .pad .ok{background:#2e8b57}.pad .clr{background:#b03a2e}
+  #msg{min-height:24px;margin:12px 0}
+  .ok-msg{color:#4cd964}.err-msg{color:#ff5c5c}
+  details{margin-top:18px}
+  input{padding:10px;margin:6px;border-radius:8px;border:none;width:160px;font-size:16px}
+  .btn{padding:10px 20px;border:none;border-radius:8px;background:#4a6cf7;color:#fff;font-size:16px;margin:6px}
+  #log{list-style:none;padding:0;max-width:340px;margin:8px auto;text-align:left;font-size:13px;color:#c9c9d9}
+  #log li{padding:4px 0;border-bottom:1px solid #33334d}
+  body.screen-only{padding:0;display:flex;align-items:center;justify-content:center;min-height:100vh}
+  body.screen-only .screen{max-width:none;width:92vw;margin:0}
+  body.screen-only #big{font-size:15vw}
+  body.screen-only #smsg{font-size:5vw;min-height:7vw}
+  body.screen-only .row{font-size:4vw}
+  body.screen-only .ctrl{display:none}
+&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class="screen"&gt;
+    &lt;div class="row"&gt;&lt;span&gt;SMART LOCK&lt;/span&gt;&lt;/div&gt;
+    &lt;div class="line"&gt;&lt;/div&gt;
+    &lt;div id="big"&gt;...&lt;/div&gt;
+    &lt;div id="smsg"&gt;&lt;/div&gt;
+    &lt;div class="line"&gt;&lt;/div&gt;
+    &lt;div class="row"&gt;&lt;span id="sMotion"&gt;--&lt;/span&gt;&lt;span id="sAlarm"&gt;--&lt;/span&gt;&lt;/div&gt;
+  &lt;/div&gt;
+
+  &lt;div class="ctrl"&gt;
+    &lt;div id="dots"&gt;----&lt;/div&gt;
+    &lt;div class="pad"&gt;
+      &lt;button onclick="press(1)"&gt;1&lt;/button&gt;&lt;button onclick="press(2)"&gt;2&lt;/button&gt;&lt;button onclick="press(3)"&gt;3&lt;/button&gt;
+      &lt;button onclick="press(4)"&gt;4&lt;/button&gt;&lt;button onclick="press(5)"&gt;5&lt;/button&gt;&lt;button onclick="press(6)"&gt;6&lt;/button&gt;
+      &lt;button onclick="press(7)"&gt;7&lt;/button&gt;&lt;button onclick="press(8)"&gt;8&lt;/button&gt;&lt;button onclick="press(9)"&gt;9&lt;/button&gt;
+      &lt;button class="clr" onclick="clr()"&gt;C&lt;/button&gt;&lt;button onclick="press(0)"&gt;0&lt;/button&gt;&lt;button class="ok" onclick="send()"&gt;OK&lt;/button&gt;
+    &lt;/div&gt;
+    &lt;div id="msg"&gt;&lt;/div&gt;
+    &lt;button class="btn" onclick="lockNow()"&gt;Khóa ngay&lt;/button&gt;
+
+    &lt;details&gt;
+      &lt;summary&gt;Đổi mã PIN&lt;/summary&gt;
+      &lt;input id="oldPin" type="password" inputmode="numeric" placeholder="PIN cũ"&gt;&lt;br&gt;
+      &lt;input id="newPin" type="password" inputmode="numeric" placeholder="PIN mới (4-8 số)"&gt;&lt;br&gt;
+      &lt;button class="btn" onclick="changePin()"&gt;Lưu&lt;/button&gt;
+    &lt;/details&gt;
+
+    &lt;details open&gt;
+      &lt;summary&gt;Nhật ký&lt;/summary&gt;
+      &lt;ul id="log"&gt;&lt;/ul&gt;
+    &lt;/details&gt;
+  &lt;/div&gt;
+
+&lt;script&gt;
+if(location.pathname === '/screen') document.body.classList.add('screen-only');
+let pin = '';
+function $(id){ return document.getElementById(id); }
+function show(){ $('dots').textContent = pin.length ? '●'.repeat(pin.length) : '----'; }
+function press(k){ if(pin.length &lt; 8){ pin += k; show(); } }
+function clr(){ pin = ''; show(); }
+function msg(t, ok){ $('msg').textContent = t; $('msg').className = ok ? 'ok-msg' : 'err-msg'; }
+
+async function post(url, data){
+  const r = await fetch(url, {method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams(data)});
+  return r.json();
+}
+async function send(){
+  if(pin.length &lt; 4){ msg('PIN phải có 4-8 chữ số', false); return; }
+  const j = await post('/unlock', {pin});
+  msg(j.msg, j.ok); clr(); refresh();
+}
+async function lockNow(){ const j = await post('/lock', {}); msg(j.msg, j.ok); refresh(); }
+async function changePin(){
+  const o = $('oldPin'), n = $('newPin');
+  const j = await post('/changepin', {old:o.value, new:n.value});
+  msg(j.msg, j.ok); o.value = ''; n.value = '';
+}
+function big(text, cls){ $('big').textContent = text; $('big').className = cls; }
+async function refresh(){
+  try{
+    const j = await (await fetch('/status')).json();
+    if(j.alarm) big('! ALARM !', 'c-red blink');
+    else if(j.lockout &gt; 0) big('WAIT ' + j.lockout + 's', 'c-yellow');
+    else if(j.locked) big('LOCKED', 'c-red');
+    else big('OPEN', 'c-green');
+    $('smsg').textContent = j.msg || (j.motion &amp;&amp; j.locked ? 'Mời nhập mã PIN...' : '');
+    $('sMotion').textContent = !j.hasPir ? '🚶 --' : (j.motion ? '🚶 Có người' : '🚶 Không có ai');
+    $('sAlarm').textContent = j.alarm ? '🚨 BÁO ĐỘNG' : '🔕 Bình thường';
+    $('log').innerHTML = j.log.map(l =&gt; '&lt;li&gt;' + l + '&lt;/li&gt;').join('');
+  }catch(e){
+    big('MẤT KẾT NỐI', 'c-yellow');
+  }
+}
+show(); refresh(); setInterval(refresh, 1000);
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+)rawliteral";
+
+// ================= TIỆN ÍCH =================
+String uptimeStr() {
+  unsigned long s = millis() / 1000;
+  char buf[12];
+  snprintf(buf, sizeof(buf), "%02lu:%02lu:%02lu", s / 3600, (s / 60) % 60, s % 60);
+  return buf;
+}
+
+void addLog(const String&amp; msg) {
+  for (int i = LOG_SIZE - 1; i &gt; 0; i--) logs[i] = logs[i - 1];
+  logs[0] = uptimeStr() + " " + msg;
+  if (logCount &lt; LOG_SIZE) logCount++;
+  Serial.println(logs[0]);
+}
+
+// Thông báo ngắn hiện trên màn hình web trong vài giây
+void showMsg(const String&amp; m) {
+  screenMsg = m;
+  screenMsgAt = millis();
+}
+
+// ================= XỬ LÝ CHUỖI / BẢO MẬT =================
+bool isValidPin(const String&amp; p) {
+  if (p.length() &lt; 4 || p.length() &gt; 8) return false;
+  for (size_t i = 0; i &lt; p.length(); i++) {
+    if (!isDigit(p[i])) return false;
+  }
+  return true;
+}
+
+// So sánh thời gian cố định: không thoát sớm khi gặp ký tự sai
+bool safeEquals(const String&amp; a, const String&amp; b) {
+  if (a.length() != b.length()) return false;
+  uint8_t diff = 0;
+  for (size_t i = 0; i &lt; a.length(); i++) diff |= a[i] ^ b[i];
+  return diff == 0;
+}
+
+unsigned long lockoutRemainingSec() {
+  if (!lockedOut) return 0;
+  unsigned long elapsed = millis() - lockoutStart;
+  if (elapsed &gt;= LOCKOUT_MS) {
+    lockedOut = false;
+    return 0;
+  }
+  return (LOCKOUT_MS - elapsed) / 1000 + 1;
+}
+
+// ================= ĐIỀU KHIỂN PHẦN CỨNG =================
+void setRelay(int pin, bool on) {
+  digitalWrite(pin, (on ^ RELAY_ACTIVE_LOW) ? HIGH : LOW);
+}
+
+// Bật/tắt còi (dùng tone để chạy được cả còi chủ động, còi thụ động và Wokwi)
+void setBuzzer(bool on) {
+  if (on == buzzerOn) return;
+  buzzerOn = on;
+  if (on) tone(PIN_BUZZER, BUZZER_FREQ);
+  else    noTone(PIN_BUZZER);
+}
+
+// PIN đúng: LED xanh nháy 3 lần
+void flashSuccess() {
+  for (int i = 0; i &lt; 3; i++) {
+    digitalWrite(PIN_LED_GREEN, LOW);  delay(80);
+    digitalWrite(PIN_LED_GREEN, HIGH); delay(80);
+  }
+}
+
+// PIN sai: LED đỏ nháy 3 lần
+void flashFail() {
+  for (int i = 0; i &lt; 3; i++) {
+    digitalWrite(PIN_LED_RED, LOW);  delay(120);
+    digitalWrite(PIN_LED_RED, HIGH); delay(120);
+  }
+}
+
+void startAlarm(const String&amp; reason) {
+  if (!alarmOn) addLog("BÁO ĐỘNG: " + reason);
+  alarmOn = true;
+  alarmStart = millis();
+  setRelay(PIN_RELAY_ALARM, true);
+}
+
+void stopAlarm() {
+  if (!alarmOn) return;
+  alarmOn = false;
+  setRelay(PIN_RELAY_ALARM, false);
+  setBuzzer(false);
+  addLog("Tắt báo động");
+}
+
+void lockDoor(const String&amp; source) {
+  isLocked = true;
+  setRelay(PIN_RELAY_LOCK, false);
+  addLog("Khóa cửa (" + source + ")");
+  showMsg("Đã khóa cửa");
+}
+
+void unlockDoor(const String&amp; source) {
+  isLocked = false;
+  unlockedAt = millis();
+  failCount = 0;
+  stopAlarm();
+  setRelay(PIN_RELAY_LOCK, true);
+  addLog("Mở khóa (" + source + ")");
+  showMsg("Mời vào!");
+}
+
+// LED đỏ : báo động = nháy nhanh, tạm khóa = nháy chậm, đang khóa = sáng, đã mở = tắt
+// LED xanh: sáng khi đã mở khóa
+// LED vàng: sáng khi có người trước cửa hoặc đang tạm khóa
+// Còi    : kêu ngắt quãng (bíp - bíp) khi báo động
+void updateLeds() {
+  unsigned long t = millis();
+  bool inLockout = lockoutRemainingSec() &gt; 0;
+  bool red;
+  if (alarmOn) red = (t / 150) % 2;
+  else if (inLockout) red = (t / 500) % 2;
+  else red = isLocked;
+  digitalWrite(PIN_LED_RED, red);
+  digitalWrite(PIN_LED_GREEN, !isLocked);
+  digitalWrite(PIN_LED_YELLOW, alarmOn ? (t / 150) % 2 == 0 : (motion || inLockout));
+  setBuzzer(alarmOn &amp;&amp; (t / 250) % 2 == 0);
+}
+
+// ================= CẢM BIẾN &amp; NÚT NHẤN =================
+void readSensors() {
+  if (!USE_PIR) return;
+
+  bool m = digitalRead(PIN_PIR) == HIGH;
+  if (m &amp;&amp; !motion) {
+    motionSince = millis();
+    addLog("Phát hiện người trước cửa");
+  }
+  motion = m;
+
+  // Cửa đang khóa mà có người đứng lâu trước cửa -&gt; báo động
+  if (motion &amp;&amp; isLocked &amp;&amp; !alarmOn &amp;&amp; lockoutRemainingSec() == 0 &amp;&amp;
+      millis() - motionSince &gt;= PIR_ALARM_DELAY_MS) {
+    showMsg("Phát hiện người lạ!");
+    startAlarm("PIR phát hiện người trước cửa");
+    motionSince = millis();  // nếu người vẫn đứng đó, sau khi hết báo động sẽ đếm lại
+  }
+}
+
+bool pressed(Button&amp; b) {
+  bool now = digitalRead(b.pin);
+  if (now != b.last &amp;&amp; millis() - b.changedAt &gt; 50) {
+    b.changedAt = millis();
+    b.last = now;
+    return now == LOW;
+  }
+  return false;
+}
+
+void handleButtons() {
+  if (pressed(btnExit)) {
+    unlockDoor("nút EXIT");
+    updateLeds();
+    flashSuccess();
+  }
+  if (pressed(btnLock)) {
+    stopAlarm();
+    lockDoor("nút LOCK");
+  }
+}
+
+// ================= HTTP HANDLERS =================
+void sendJson(bool ok, const String&amp; msg) {
+  server.send(200, "application/json", "{\"ok\":" + String(ok ? "true" : "false") + ",\"msg\":\"" + msg + "\"}");
+}
+
+String jsonBool(bool v) {
+  return v ? "true" : "false";
+}
+
+void handleRoot() {
+  server.send_P(200, "text/html", PAGE_HTML);
+}
+
+void handleStatus() {
+  bool msgActive = screenMsg.length() &amp;&amp; millis() - screenMsgAt &lt; SCREEN_MSG_MS;
+  String json = "{\"locked\":" + jsonBool(isLocked) +
+                ",\"lockout\":" + String(lockoutRemainingSec()) +
+                ",\"hasPir\":" + jsonBool(USE_PIR) +
+                ",\"motion\":" + jsonBool(motion) +
+                ",\"alarm\":" + jsonBool(alarmOn) +
+                ",\"msg\":\"" + (msgActive ? screenMsg : "") + "\"" +
+                ",\"log\":[";
+  for (int i = 0; i &lt; logCount; i++) {
+    if (i) json += ",";
+    json += "\"" + logs[i] + "\"";
+  }
+  json += "]}";
+  server.send(200, "application/json", json);
+}
+
+void handleUnlock() {
+  unsigned long remain = lockoutRemainingSec();
+  if (remain &gt; 0) {
+    sendJson(false, "Sai quá nhiều lần! Thử lại sau " + String(remain) + "s");
+    return;
+  }
+
+  String pin = server.arg("pin");
+  pin.trim();
+  if (!isValidPin(pin)) {
+    sendJson(false, "PIN không hợp lệ (chỉ 4-8 chữ số)");
+    return;
+  }
+
+  if (safeEquals(pin, currentPin)) {
+    unlockDoor("PIN trên web");
+    sendJson(true, "Mở khóa thành công!");
+    updateLeds();
+    flashSuccess();
+    return;
+  }
+
+  failCount++;
+  addLog("Sai PIN lần " + String(failCount));
+  if (failCount &gt;= MAX_FAILS) {
+    failCount = 0;
+    lockedOut = true;
+    lockoutStart = millis();
+    showMsg("Sai PIN quá 3 lần!");
+    startAlarm("sai PIN " + String(MAX_FAILS) + " lần");
+    sendJson(false, "Sai " + String(MAX_FAILS) + " lần! Tạm khóa " + String(LOCKOUT_MS / 1000) + "s");
+  } else {
+    showMsg("Sai PIN! " + String(failCount) + "/" + String(MAX_FAILS));
+    sendJson(false, "Sai PIN! Còn " + String(MAX_FAILS - failCount) + " lần thử");
+  }
+  flashFail();
+}
+
+// Khóa từ web KHÔNG tắt được báo động: chỉ PIN đúng hoặc nút trong nhà mới tắt được
+void handleLock() {
+  lockDoor("web");
+  sendJson(true, "Đã khóa cửa");
+}
+
+void handleChangePin() {
+  String oldPin = server.arg("old");
+  String newPin = server.arg("new");
+  oldPin.trim();
+  newPin.trim();
+
+  if (lockoutRemainingSec() &gt; 0) {
+    sendJson(false, "Đang bị tạm khóa");
+    return;
+  }
+  if (!safeEquals(oldPin, currentPin)) {
+    addLog("Đổi PIN thất bại (sai PIN cũ)");
+    sendJson(false, "PIN cũ không đúng");
+    return;
+  }
+  if (!isValidPin(newPin)) {
+    sendJson(false, "PIN mới phải gồm 4-8 chữ số");
+    return;
+  }
+
+  currentPin = newPin;
+  prefs.putString("pin", currentPin);
+  addLog("Đã đổi PIN");
+  showMsg("Đã đổi PIN");
+  sendJson(true, "Đổi PIN thành công!");
+}
+
+// ================= SETUP / LOOP =================
+void setup() {
+  Serial.begin(115200);
+
+  for (int pin : GND_PINS) {
+    pinMode(pin, OUTPUT);
+    digitalWrite(pin, LOW);
+  }
+
+  pinMode(PIN_RELAY_LOCK, OUTPUT);
+  pinMode(PIN_RELAY_ALARM, OUTPUT);
+  setRelay(PIN_RELAY_LOCK, false);
+  setRelay(PIN_RELAY_ALARM, false);
+  pinMode(PIN_LED_GREEN, OUTPUT);
+  pinMode(PIN_LED_YELLOW, OUTPUT);
+  pinMode(PIN_LED_RED, OUTPUT);
+  pinMode(PIN_BUZZER, OUTPUT);
+  digitalWrite(PIN_BUZZER, LOW);
+  pinMode(PIN_BTN_EXIT, INPUT_PULLUP);
+  pinMode(PIN_BTN_LOCK, INPUT_PULLUP);
+  pinMode(PIN_PIR, INPUT);
+
+  prefs.begin("smartlock", false);
+  currentPin = prefs.getString("pin", DEFAULT_PIN);
+
+  lockDoor("khởi động");
+
+  WiFi.softAP(AP_SSID, AP_PASS);
+  Serial.print("WiFi: ");
+  Serial.println(AP_SSID);
+  Serial.print("Ban phim:   http://");
+  Serial.println(WiFi.softAPIP());
+  Serial.print("Man hinh:   http://");
+  Serial.print(WiFi.softAPIP());
+  Serial.println("/screen");
+
+  server.on("/", HTTP_GET, handleRoot);
+  server.on("/screen", HTTP_GET, handleRoot);
+  server.on("/status", HTTP_GET, handleStatus);
+  server.on("/unlock", HTTP_POST, handleUnlock);
+  server.on("/lock", HTTP_POST, handleLock);
+  server.on("/changepin", HTTP_POST, handleChangePin);
+  server.begin();
+}
+
+void loop() {
+  server.handleClient();
+  handleButtons();
+  readSensors();
+
+  // Tự khóa lại khi hết thời gian mở khóa
+  if (!isLocked &amp;&amp; millis() - unlockedAt &gt;= AUTO_LOCK_MS) {
+    lockDoor("tự động");
+  }
+
+  if (alarmOn &amp;&amp; millis() - alarmStart &gt;= ALARM_MS) stopAlarm();
+
+  updateLeds();
+}
+</code></pre>
+
+<footer>Tài liệu hướng dẫn đề tài IoT: Khóa cửa thông minh nhập PIN trên Web (ESP32).</footer>
+</div>
+</body>
+</html>
