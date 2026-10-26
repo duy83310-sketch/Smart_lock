@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SmartLock ESP32 - Bản Đồ Tri Thức & Sổ Tay Vấn Đáp IoT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #07090e;
+  --bg-subtle: #0d111a;
+  --card: #131926;
+  --card-hover: #182030;
+  --border: #212c40;
+  --border-focus: #3b82f6;
+  --txt: #f1f5f9;
+  --txt-muted: #94a3b8;
+  --txt-faint: #64748b;
+  --blue: #3b82f6;
+  --blue-glow: rgba(59, 130, 246, 0.25);
+  --cyan: #06b6d4;
+  --emerald: #10b981;
+  --emerald-bg: rgba(16, 185, 129, 0.12);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245, 158, 11, 0.12);
+  --rose: #f43f5e;
+  --rose-bg: rgba(244, 63, 94, 0.12);
+  --purple: #8b5cf6;
+  --radius: 14px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+  background-color: var(--bg);
+  background-image: 
+    radial-gradient(1000px 500px at 50% -50px, rgba(59,130,246,0.18) 0%, transparent 70%),
+    radial-gradient(800px 400px at 90% 800px, rgba(139,92,246,0.1) 0%, transparent 70%);
+  color: var(--txt);
+  line-height: 1.6;
+  padding: 24px 16px 60px;
+  -webkit-font-smoothing: antialiased;
+}
+.container { max-width: 1140px; margin: 0 auto; }
+
+/* Header & Banner */
+header {
+  text-align: center;
+  padding: 24px 0 36px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 30px;
+}
+.badge-group { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 600;
+  background: var(--card); border: 1px solid var(--border); color: var(--txt-muted);
+}
+.badge.primary { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.4); color: #93c5fd; }
+.badge.success { background: var(--emerald-bg); border-color: rgba(16,185,129,0.3); color: var(--emerald); }
+.badge.warning { background: var(--amber-bg); border-color: rgba(245,158,11,0.3); color: var(--amber); }
+
+h1 {
+  font-size: clamp(26px, 4vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.8px;
+  background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 12px;
+}
+p.subtitle {
+  color: var(--txt-muted);
+  font-size: 15px;
+  max-width: 720px;
+  margin: 0 auto 18px;
+}
+.student-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 13.5px;
+  color: var(--txt);
+}
+.student-tag strong { color: var(--blue); }
+
+/* Quick Metrics Grid */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 32px;
+}
+.metric-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+  transition: transform 0.2s, border-color 0.2s;
+}
+.metric-card:hover { transform: translateY(-2px); border-color: var(--border-focus); }
+.metric-card .num { font-size: 28px; font-weight: 800; color: var(--blue); margin-bottom: 2px; }
+.metric-card .label { font-size: 12.5px; color: var(--txt-muted); font-weight: 500; }
+
+/* Navigation Tabs */
+.tabs-nav {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+}
+.tab-btn {
+  padding: 10px 18px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--txt-muted);
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+.tab-btn:hover { color: var(--txt); background: var(--bg-subtle); }
+.tab-btn.active {
+  background: var(--blue);
+  color: #fff;
+  border-color: var(--blue);
+  box-shadow: 0 4px 14px var(--blue-glow);
+}
+
+/* Tab Content Panels */
+.tab-panel { display: none; animation: fadeIn 0.25s ease; }
+.tab-panel.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Cards & Sections */
+.section-title {
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+.section-desc {
+  color: var(--txt-muted);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+/* Hardware Components Grid */
+.hw-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+.hw-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.hw-card:hover { border-color: var(--border-focus); background: var(--card-hover); }
+.hw-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.hw-title { font-size: 16px; font-weight: 700; color: #fff; }
+.hw-pin {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  padding: 3px 8px;
+  border-radius: 6px;
+  color: var(--cyan);
+}
+.hw-desc { font-size: 13.5px; color: var(--txt-muted); margin-bottom: 12px; flex-grow: 1; }
+.hw-box {
+  background: var(--bg-subtle);
+  border-left: 3px solid var(--blue);
+  padding: 10px 12px;
+  border-radius: 0 8px 8px 0;
+  font-size: 12.5px;
+  color: #cbd5e1;
+}
+
+/* Callout Alert */
+.alert {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.alert.blue { border-left: 4px solid var(--blue); }
+.alert.green { border-left: 4px solid var(--emerald); }
+.alert.amber { border-left: 4px solid var(--amber); }
+.alert-icon { font-size: 22px; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.alert-content h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: #fff; }
+.alert-content p { font-size: 13.5px; color: var(--txt-muted); }
+
+/* Slide vs Code Table */
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--card);
+  margin-bottom: 24px;
+}
+table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px; }
+th, td { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+th { background: var(--bg-subtle); font-weight: 600; color: var(--txt-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.8px; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(255,255,255,0.015); }
+code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: var(--bg-subtle);
+  color: #93c5fd;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Code Architecture Blocks */
+.module-list { display: flex; flex-direction: column; gap: 14px; }
+.module-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  display: grid;
+  grid-template-columns: 80px 1fr 2fr;
+  gap: 18px;
+  align-items: center;
+  transition: all 0.2s;
+}
+.module-item:hover { border-color: var(--blue); transform: translateX(3px); }
+.mod-num { font-size: 12px; font-weight: 700; color: var(--blue); font-family: 'JetBrains Mono', monospace; }
+.mod-name { font-weight: 700; font-size: 15px; color: #fff; }
+.mod-desc { font-size: 13px; color: var(--txt-muted); }
+@media (max-width: 768px) {
+  .module-item { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* Test Cases Matrix */
+.tc-grid { display: flex; flex-direction: column; gap: 10px; }
+.tc-row {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.tc-id { font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; color: var(--emerald); width: 60px; }
+.tc-action { font-size: 13.5px; font-weight: 600; color: #fff; flex: 1; }
+.tc-result { font-size: 13px; color: var(--txt-muted); flex: 1.5; }
+.tc-tag {
+  font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 6px;
+  background: rgba(16,185,129,0.15); color: var(--emerald); border: 1px solid rgba(16,185,129,0.3);
+}
+
+/* Accordion Q&A Flashcards */
+.qa-wrap { display: flex; flex-direction: column; gap: 12px; }
+.qa-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.qa-card:hover { border-color: var(--blue); }
+.qa-head {
+  padding: 16px 20px;
+  font-weight: 700;
+  font-size: 15px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+}
+.qa-head span.icon {
+  font-size: 18px;
+  transition: transform 0.2s ease;
+  color: var(--txt-muted);
+}
+.qa-card.open .qa-head span.icon { transform: rotate(180deg); color: var(--blue); }
+.qa-body {
+  padding: 0 20px 18px;
+  font-size: 14px;
+  color: #cbd5e1;
+  line-height: 1.65;
+  display: none;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  padding-top: 14px;
+}
+.qa-card.open .qa-body { display: block; }
+.highlight-ans {
+  background: rgba(59,130,246,0.08);
+  border-left: 3px solid var(--blue);
+  padding: 12px 14px;
+  border-radius: 0 8px 8px 0;
+  margin-top: 8px;
+  color: #93c5fd;
+  font-size: 13.5px;
+}
+
+/* Footer */
+footer {
+  text-align: center;
+  margin-top: 50px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--txt-faint);
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <header>
+    <div class="badge-group">
+      <span class="badge primary">⚡ IoT SmartLock ESP32</span>
+      <span class="badge success">✓ Chuẩn Kiến Trúc Non-Blocking</span>
+      <span class="badge warning">🛡️ Bảo Mật Chống Timing Attack</span>
+      <span class="badge">📡 SoftAP Web Server</span>
+    </div>
+    <h1>SỔ TAY TỔNG HỢP KIẾN THỨC & VẤN ĐÁP IOT</h1>
+    <p class="subtitle">Bản đồ kiến thức toàn diện: Đối chiếu Slide lý thuyết Tuần 4 & 5, Bóc tách phần cứng, Kiến trúc Code và Bộ 15 Test Cases phục vụ thi vấn đáp.</p>
+    <div class="student-tag">
+      <span>Thành viên: <strong>Nguyễn Đức Duy (A48496)</strong></span>
+      <span>•</span>
+      <span>Phụ trách: <strong>Kiểm thử 15 Test Cases & Biên soạn Báo cáo</strong></span>
+    </div>
+  </header>
+
+  <!-- Metric Cards -->
+  <div class="metrics">
+    <div class="metric-card">
+      <div class="num">0 ms</div>
+      <div class="label">Lệnh delay() đóng băng CPU</div>
+    </div>
+    <div class="metric-card">
+      <div class="num">15</div>
+      <div class="label">Kịch bản kiểm thử (Test Cases)</div>
+    </div>
+    <div class="metric-card">
+      <div class="num">8 GPIO</div>
+      <div class="label">Tối ưu chân & Sáng tạo GND phụ</div>
+    </div>
+    <div class="metric-card">
+      <div class="num">100%</div>
+      <div class="label">Khớp nội dung Slide Tuần 4 & 5</div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('hw')">🔌 1. Phần Cứng & GND Phụ</button>
+    <button class="tab-btn" onclick="switchTab('slide')">📑 2. Slide Tuần 4, 5 vs Code</button>
+    <button class="tab-btn" onclick="switchTab('code')">🧠 3. Kiến Trúc 8 Khối Code</button>
+    <button class="tab-btn" onclick="switchTab('test')">🧪 4. Bộ 15 Kịch Bản Kiểm Thử</button>
+    <button class="tab-btn" onclick="switchTab('qa')">🎯 5. Bộ Phản Xạ Vấn Đáp A+</button>
+  </div>
+
+  <!-- ================= TAB 1: PHẦN CỨNG ================= -->
+  <div id="tab-hw" class="tab-panel active">
+    <div class="section-title">🔌 Bóc Tách Các Thành Phần Phần Cứng & Cơ Chế GND Phụ</div>
+    <p class="section-desc">Mọi linh kiện trong sơ đồ Wokwi đều được tính toán tối ưu dòng điện và lược bỏ các phần rườm rà.</p>
+
+    <div class="alert blue">
+      <div class="alert-icon">💡</div>
+      <div class="alert-content">
+        <h4>Điểm Sáng Tạo: Kỹ Thuật "GND Phụ" (Virtual GND bằng GPIO)</h4>
+        <p>Trên board ESP32 chỉ có 2 chân GND thật. Thay vì nối dây chằng chịt về ray âm breadboard, code cấu hình 6 chân GPIO <code>D22, D19, D16, D33, D14, D4</code> xuất mức <code>OUTPUT LOW</code> (0V) để làm chân âm riêng cho LED, nút bấm và PIR. Dòng tiêu thụ của LED chỉ ~6mA, nút nhấn ~0.07mA, PIR ~0.05mA, hoàn toàn an toàn dưới ngưỡng 20mA của chân ESP32.</p>
+      </div>
+    </div>
+
+    <div class="hw-grid">
+      <div class="hw-card">
+        <div class="hw-head">
+          <div class="hw-title">ESP32 DevKit V1</div>
+          <div class="hw-pin">Trung tâm</div>
+        </div>
+        <div class="hw-desc">Vi điều khiển lõi kép 240MHz. Phát WiFi AP <code>SmartLock-ESP32</code>, chạy Web Server cổng 80, đọc cảm biến và lưu PIN vào bộ nhớ flash NVS.</div>
+        <div class="hw-box">Đóng vai trò là "bộ não" điều phối toàn bộ thiết bị.</div>
+      </div>
+
+      <div class="hw-card">
+        <div class="hw-head">
+          <div class="hw-title">Relay Kênh 1 (Chốt cửa)</div>
+          <div class="hw-pin">GPIO 26 (D26)</div>
+        </div>
+        <div class="hw-desc">Module Relay 5V đóng ngắt cuộn hút nam châm điện tử (Solenoid Lock). Kích mức <code>LOW</code> (Active-Low). Đóng tiếp điểm mở khóa 5s rồi tự nhả.</div>
+        <div class="hw-box">Cách ly điện an toàn giữa mạch điều khiển và khóa tải lớn.</div>
+      </div>
+
+      <div class="hw-card">
+        <div class="hw-head">
+          <div class="hw-title">Relay Kênh 2 (Báo động)</div>
+          <div class="hw-pin">GPIO 27 (D27)</div>
+        </div>
+        <div class="hw-desc">Đầu ra cảnh báo phụ. Cho phép đấu nối thêm đèn chớp 220V hoặc còi hú công suất lớn ngoài nhà khi phát hiện đột nhập hoặc sai PIN 3 lần.</div>
+        <div class="hw-box">Tự ngắt sau 15 giây để chống quá nhiệt và ô nhiễm tiếng ồn.</div>
+      </div>
+
+      <div class="hw-card">
+        <div class="hw-head">
+          <div class="hw-title">Cảm Biến PIR HC-SR501</div>
+          <div class="hw-pin">GPIO 35 (D35)</div>
+        </div>
+        <div class="hw-desc">Phát hiện hồng ngoại chuyển động từ cơ thể người trước cửa. Tích hợp thuật toán "Chống lảng vảng": đứng quá 8 giây khi cửa đang khóa sẽ báo động ngay.</div>
+        <div class="hw-box">Chân GND của PIR nối vào chân D4 (GND phụ).</div>
+      </div>
+
+      <div class="hw-card">
+        <div class="hw-head">
+          <div class="hw-title">Còi Báo Động (Buzzer)</div>
+          <div class="hw-pin">GPIO 25 (D25)</div>
+        </div>
+        <div class="hw-desc">Phát âm bíp bíp ngắt quãng tần số 2000Hz (hàm <code>tone()</code>). Do ăn dòng tức thời cao hơn, chân âm còi nối thẳng vào <strong>GND thật</strong> của ESP32.</div>
+        <div class="hw-box">Nhịp bíp đồng bộ không dùng delay: <code>(t / 250) % 2 == 0</code>.</div>
+      </div>
+
+      <div class="hw-card">
+        <div class="hw-head">
+          <div class="hw-title">2 Nút Nhấn (Exit & Lock)</div>
+          <div class="hw-pin">D32 & D13</div>
+        </div>
+        <div class="hw-desc">Đặt ở <strong>bên trong phòng</strong>. Nút EXIT (Đỏ) mở khóa khẩn cấp không cần PIN. Nút LOCK (Trắng) khóa cửa ngay và dập tắt báo động.</div>
+        <div class="hw-box">Cấu hình <code>INPUT_PULLUP</code> + Chống rung (Debounce) 50ms.</div>
+      </div>
+
+      <div class="hw-card">
+        <div class="hw-head">
+          <div class="hw-title">Cụm 3 Đèn LED + Điện Trở</div>
+          <div class="hw-pin">D23, D18, D17</div>
+        </div>
+        <div class="hw-desc">🔴 Đỏ (D23): Khóa / Báo động | 🟢 Xanh (D18): Mở khóa | 🟡 Vàng (D17): Có người / Phạt lockout. Mỗi LED nối tiếp trở 220Ω hạn dòng.</div>
+        <div class="hw-box">Cực âm LED nối vào các chân GND phụ D22, D19, D16.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 2: SLIDE VS CODE ================= -->
+  <div id="tab-slide" class="tab-panel">
+    <div class="section-title">📑 Đối Chiếu Kiến Thức Slide Môn Học (Tuần 4 & 5) Vào Dự Án</div>
+    <p class="section-desc">Mọi tính năng trong SmartLock đều là sự hiện thực hóa hoàn hảo những gì Thầy giảng dạy trên lớp.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 20%;">Chủ Đề Trong Slide</th>
+            <th style="width: 35%;">Lý Thuyết Thầy Dạy (Slide Tuần 4 & 5)</th>
+            <th style="width: 45%;">Ứng Dụng Thực Tế Trong SmartLock</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Lập Trình Đa Nhiệm (Tuần 4)</strong></td>
+            <td>Lệnh <code>delay()</code> làm "đóng băng" CPU, làm lỡ sự kiện khẩn cấp. Phải dùng <code>millis()</code> để tạo kiến trúc Non-blocking (Slide 50-51).</td>
+            <td>Khóa cửa dùng các mốc thời gian <code>unlockedAt</code>, <code>motionSince</code>, <code>lockoutStart</code>. Vòng <code>loop()</code> chạy hàng nghìn lần/giây, không delay.</td>
+          </tr>
+          <tr>
+            <td><strong>Xử Lý Rollover 49.7 Ngày (Tuần 4)</strong></td>
+            <td>Biến <code>millis()</code> là <code>unsigned long</code> 32-bit sẽ tràn số sau 49.7 ngày. Công thức <code>current - prev >= interval</code> tự sửa tràn (Slide 57).</td>
+            <td>Áp dụng chuẩn công thức: <code>millis() - unlockedAt >= AUTO_LOCK_MS</code>. Hệ thống hoạt động liên tục nhiều tháng mà không lo lỗi tràn số.</td>
+          </tr>
+          <tr>
+            <td><strong>Dữ Liệu JSON (Tuần 4)</strong></td>
+            <td>JSON là ngôn ngữ truyền tải dữ liệu chuẩn trong IoT với cấu trúc cặp Key - Value (Slide 24-28).</td>
+            <td>Endpoint <code>/status</code> trả về JSON thu gọn: <code>{"locked":true,"alarm":false,"motion":true,"msg":"..."}</code> cho Web hiển thị real-time.</td>
+          </tr>
+          <tr>
+            <td><strong>Chế Độ WiFi AP Mode (Tuần 5)</strong></td>
+            <td>So sánh STA Mode (nối router) vs AP Mode (tự phát WiFi riêng, làm chủ mạng) (Slide 7-8).</td>
+            <td>Dùng <code>WiFi.softAP("SmartLock-ESP32", "12345678")</code>. Khóa hoạt động độc lập, không sợ mất WiFi nhà hay mất mạng Internet bên ngoài.</td>
+          </tr>
+          <tr>
+            <td><strong>Kiến Trúc Web Server (Tuần 5)</strong></td>
+            <td>Client gửi Request (GET/POST), Server xử lý và gửi Response mã 200, 404 qua cổng 80 (Slide 9-13).</td>
+            <td>Khởi tạo <code>WebServer server(80)</code>, định tuyến qua <code>server.on("/unlock", HTTP_POST, handleUnlock)</code> và liên tục gọi <code>server.handleClient()</code>.</td>
+          </tr>
+          <tr>
+            <td><strong>Tối Ưu Bộ Nhớ RAM (Tuần 5)</strong></td>
+            <td>Mẹo tiết kiệm RAM: Đóng gói HTML gọn nhẹ, tránh cấp phát chuỗi String lớn trong RAM vi điều khiển (Slide 42).</td>
+            <td>Khai báo <code>PAGE_HTML[] PROGMEM</code> để nạp giao diện trực tiếp vào Flash bộ nhớ chương trình, giải phóng tối đa RAM cho ESP32.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= TAB 3: KIẾN TRÚC CODE ================= -->
+  <div id="tab-code" class="tab-panel">
+    <div class="section-title">🧠 Bóc Tách Kiến Trúc Code 8 Khối Module (smartlock.ino)</div>
+    <p class="section-desc">Toàn bộ 547 dòng code được phân chia thành 8 khối chức năng tách bạch, dễ bảo trì và dễ giải thích khi vấn đáp.</p>
+
+    <div class="module-list">
+      <div class="module-item">
+        <div class="mod-num">BLOCK 1</div>
+        <div class="mod-name">Thư viện & Chân Pinout (L1-67)</div>
+        <div class="mod-desc">Include <code>WiFi.h</code>, <code>WebServer.h</code>, <code>Preferences.h</code>. Khai báo 8 chân GPIO điều khiển và mảng <code>GND_PINS</code> 6 chân phụ.</div>
+      </div>
+
+      <div class="module-item">
+        <div class="mod-num">BLOCK 2</div>
+        <div class="mod-name">Quản Lý Trạng Thái (L68-96)</div>
+        <div class="mod-desc">Biến cờ: <code>isLocked</code>, <code>lockedOut</code>, <code>alarmOn</code>, <code>motion</code>. Cấu trúc <code>Button</code> và mảng nhật ký FIFO 8 sự kiện gần nhất <code>logs[8]</code>.</div>
+      </div>
+
+      <div class="module-item">
+        <div class="mod-num">BLOCK 3</div>
+        <div class="mod-name">Giao Diện Web PROGMEM (L97-217)</div>
+        <div class="mod-desc">Chứa HTML/CSS/JS. Chế độ 2 trong 1: <code>/</code> (Bàn phím + Màn hình) và <code>/screen</code> (Chỉ màn hình gắn cửa). Tự động gọi <code>fetch('/status')</code> mỗi 1s.</div>
+      </div>
+
+      <div class="module-item">
+        <div class="mod-num">BLOCK 4</div>
+        <div class="mod-name">Bảo Mật & Tiện Ích (L219-266)</div>
+        <div class="mod-desc">Hàm <code>safeEquals()</code> chống <strong>Timing Attack</strong>, <code>isValidPin()</code> chặn ký tự lạ, và <code>lockoutRemainingSec()</code> đếm ngược phạt 30s.</div>
+      </div>
+
+      <div class="module-item">
+        <div class="mod-num">BLOCK 5</div>
+        <div class="mod-name">Điều Khiển Phần Cứng (L267-343)</div>
+        <div class="mod-desc">Đóng/mở Relay với logic Active-Low <code>(on ^ RELAY_ACTIVE_LOW)</code>, phát âm còi tần số 2kHz và máy trạng thái nhấp nháy LED không delay <code>updateLeds()</code>.</div>
+      </div>
+
+      <div class="module-item">
+        <div class="mod-num">BLOCK 6</div>
+        <div class="mod-name">Cảm Biến & Nút Nhấn (L345-385)</div>
+        <div class="mod-desc">Thuật toán chống rung phím 50ms <code>pressed()</code>. Cảm biến PIR phát hiện người lảng vảng quá 8 giây khi cửa đang khóa để kích hoạt báo động.</div>
+      </div>
+
+      <div class="module-item">
+        <div class="mod-num">BLOCK 7</div>
+        <div class="mod-name">Bộ Định Tuyến Web API (L387-487)</div>
+        <div class="mod-desc">Các HTTP Handler: <code>/status</code> (xuất JSON), <code>/unlock</code> (kiểm tra PIN, phạt lockout nếu sai 3 lần), <code>/lock</code> (khóa web), <code>/changepin</code> (lưu vào NVS).</div>
+      </div>
+
+      <div class="module-item">
+        <div class="mod-num">BLOCK 8</div>
+        <div class="mod-name">Setup & Super-Loop (L489-547)</div>
+        <div class="mod-desc"><code>setup()</code>: nạp PIN từ NVS Flash, khởi chạy WiFi AP, mở cổng WebServer. <code>loop()</code>: điều phối non-blocking, tự khóa cửa sau 5s, tự ngắt báo động sau 15s.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 4: KIỂM THỬ ================= -->
+  <div id="tab-test" class="tab-panel">
+    <div class="section-title">🧪 Ma Trận 15 Kịch Bản Kiểm Thử (Nhiệm Vụ Của Bạn)</div>
+    <p class="section-desc">Là người trực tiếp phụ trách Kiểm thử, bạn cần thuộc lòng các kịch bản này để giải trình chi tiết khi giảng viên hỏi.</p>
+
+    <div class="tc-grid">
+      <div class="tc-row">
+        <div class="tc-id">TC-01</div>
+        <div class="tc-action">Nhập đúng mã PIN (VD: 1234)</div>
+        <div class="tc-result">Relay 1 đóng chốt mở cửa, LED xanh nháy 3 lần rồi sáng liên tục, Web hiện "OPEN".</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-02</div>
+        <div class="tc-action">Cơ chế tự khóa (Auto-lock 5s)</div>
+        <div class="tc-result">Sau 5 giây mở cửa, Relay 1 tự động nhả về trạng thái KHÓA, LED đỏ sáng lại.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-03</div>
+        <div class="tc-action">Nhấn nút EXIT trong nhà</div>
+        <div class="tc-result">Cửa mở ngay lập tức không cần mã PIN, LED xanh nháy, tự khóa sau 5s.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-04</div>
+        <div class="tc-action">Nhấn nút LOCK trong nhà</div>
+        <div class="tc-result">Cửa lập tức chuyển sang trạng thái KHÓA, đồng thời dập tắt mọi báo động nếu có.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-05</div>
+        <div class="tc-action">Nhập sai PIN lần 1 & lần 2</div>
+        <div class="tc-result">Cửa vẫn khóa, LED đỏ nháy 3 lần, Web báo số lần thử còn lại (2 và 1 lần).</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-06</div>
+        <div class="tc-action">Nhập sai PIN liên tiếp lần 3</div>
+        <div class="tc-result">Kích hoạt LOCKOUT 30s + Báo động: còi kêu ngắt quãng, LED đỏ nháy nhanh, khóa bàn phím.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-07</div>
+        <div class="tc-action">Cố nhập mã trong lúc Lockout 30s</div>
+        <div class="tc-result">Server từ chối yêu cầu, trả về thông báo "Thử lại sau X giây" kèm thời gian đếm lùi.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-08</div>
+        <div class="tc-action">Người đi ngang qua cửa (< 8s)</div>
+        <div class="tc-result">PIR nhận diện, LED vàng sáng, Web hiện "Có người", không kích hoạt còi báo động.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-09</div>
+        <div class="tc-action">Người đứng lảng vảng (> 8s) khi khóa</div>
+        <div class="tc-result">Phát hiện đối tượng khả nghi: Còi kêu bíp bíp, Relay 2 bật đèn cảnh báo, Web nhấp nháy đỏ.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-10</div>
+        <div class="tc-action">Người đứng trước cửa khi ĐANG MỞ</div>
+        <div class="tc-result">Hệ thống nhận diện là khách ra vào hợp lệ, không kích hoạt báo động.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-11</div>
+        <div class="tc-action">Tự ngắt báo động sau 15 giây</div>
+        <div class="tc-result">Nếu không ai nhấn nút tắt, còi và Relay 2 tự động ngắt sau 15s để tránh cháy còi.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-12</div>
+        <div class="tc-action">Đổi mã PIN mới trên Web</div>
+        <div class="tc-result">Phải nhập đúng PIN cũ. PIN mới 4-8 số được lưu vào NVS Flash qua Preferences.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-13</div>
+        <div class="tc-action">Cúp điện / Reset đột ngột</div>
+        <div class="tc-result">Khi có điện lại, mã PIN mới đổi vẫn được giữ nguyên vẹn từ NVS Flash (không bị mất).</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-14</div>
+        <div class="tc-action">Chế độ màn hình gắn cửa (/screen)</div>
+        <div class="tc-result">Tự động ẩn bàn phím, phóng to chữ "LOCKED / OPEN / ALARM" chiếm trọn toàn màn hình.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+
+      <div class="tc-row">
+        <div class="tc-id">TC-15</div>
+        <div class="tc-action">Đồng bộ đa thiết bị Real-time</div>
+        <div class="tc-result">Mở 2 điện thoại cùng lúc: khi 1 máy mở khóa, máy kia tự động đổi trạng thái trong vòng 1s.</div>
+        <span class="tc-tag">ĐẠT (PASS)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB 5: VẤN ĐÁP A+ ================= -->
+  <div id="tab-qa" class="tab-panel">
+    <div class="section-title">🎯 Bộ Câu Hỏi Vấn Đáp "Trúng Tủ" (Flashcards Điểm A+)</div>
+    <p class="section-desc">Bấm vào từng câu hỏi để xem câu trả lời chuẩn phản xạ nhanh trước hội đồng chấm thi.</p>
+
+    <div class="qa-wrap">
+      <div class="qa-card open">
+        <div class="qa-head" onclick="toggleQA(this)">
+          <span>1. Thầy hỏi: "Em làm phần kiểm thử, vậy lỗi nào là nghiêm trọng nhất em đã tìm ra và khắc phục?"</span>
+          <span class="icon">▼</span>
+        </div>
+        <div class="qa-body">
+          Trong quá trình thử nghiệm, nguy cơ lớn nhất là <strong>tấn công brute-force dò mã PIN</strong> và <strong>nghẽn vi điều khiển khi dùng delay</strong>.
+          <div class="highlight-ans">
+            <strong>Cách trả lời:</strong> "Dạ thưa thầy, khi kiểm thử bảo mật, em nhận thấy nếu không giới hạn lần nhập thì kẻ gian có thể viết script thử hàng nghìn mã liên tục. Em đã kiểm thử kịch bản sai 3 lần liên tiếp: hệ thống phải lập tức kích hoạt khóa bàn phím trong 30 giây (Lockout) và hú còi báo động. Đồng thời code không dùng <code>delay()</code> nên trong suốt 30 giây bị phạt, ESP32 vẫn tiếp tục quét nút bấm trong nhà và nhận tín hiệu cảm biến PIR bình thường ạ."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-head" onclick="toggleQA(this)">
+          <span>2. Thầy hỏi: "Tại sao nhóm chọn WiFi Access Point (AP) mà không dùng Station Mode kết nối Router?"</span>
+          <span class="icon">▼</span>
+        </div>
+        <div class="qa-body">
+          Đối chiếu trực tiếp Slide Chương 5 (Phân biệt STA Mode và AP Mode).
+          <div class="highlight-ans">
+            <strong>Cách trả lời:</strong> "Dạ, theo nội dung Chương 5, Station Mode đòi hỏi phải có mạng WiFi gia đình và phụ thuộc vào Internet. Nhưng đối với thiết bị an ninh then chốt như Khóa cửa, nhóm em quyết định chọn <strong>AP Mode</strong> để ESP32 tự tạo mạng riêng. Nhờ đó, ngay cả khi nhà bị cúp điện mạng WiFi tổng hoặc rớt Internet, chủ nhà đứng trước cửa vẫn luôn kết nối được vào khóa để mở cửa mà không bị phụ thuộc ạ."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-head" onclick="toggleQA(this)">
+          <span>3. Thầy hỏi: "Tại sao lại có hàm safeEquals() mà không dùng dấu so sánh bằng thông thường (==)?"</span>
+          <span class="icon">▼</span>
+        </div>
+        <div class="qa-body">
+          Đây là câu hỏi "bẫy" học thuật cực kỳ hay về An toàn thông tin.
+          <div class="highlight-ans">
+            <strong>Cách trả lời:</strong> "Dạ thưa thầy, phép so sánh <code>==</code> thông thường sẽ thoát sớm ngay khi gặp ký tự sai đầu tiên, dẫn đến thời gian thực thi khác nhau tùy thuộc vào vị trí ký tự sai. Kẻ tấn công có thể đo thời gian phản hồi qua mạng ở mức nano-giây để đoán từng chữ số của mã PIN (tấn công <strong>Timing Attack</strong>). Hàm <code>safeEquals()</code> của nhóm em sử dụng toán tử XOR quét qua toàn bộ chuỗi với thời gian cố định (Constant-time), triệt tiêu hoàn toàn lỗ hổng này ạ."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-head" onclick="toggleQA(this)">
+          <span>4. Thầy hỏi: "Hệ thống làm sao đồng bộ được trạng thái giữa nhiều điện thoại cùng lúc?"</span>
+          <span class="icon">▼</span>
+        </div>
+        <div class="qa-body">
+          Liên hệ trực tiếp với bài học JSON Tuần 4 và Web Server Tuần 5.
+          <div class="highlight-ans">
+            <strong>Cách trả lời:</strong> "Dạ, trên trình duyệt client của mỗi điện thoại, nhóm em đặt một bộ định thời <code>setInterval(refresh, 1000)</code>. Cứ mỗi 1 giây, trình duyệt tự động gửi yêu cầu <code>GET /status</code>. ESP32 trả về một chuỗi JSON chứa toàn bộ dữ liệu cảm biến và trạng thái khóa. Trình duyệt bóc tách JSON và cập nhật giao diện mà không cần reload trang (Zero-reload), nhờ đó mọi thiết bị kết nối vào mạng đều nhìn thấy cùng 1 trạng thái thời gian thực ạ."
+          </div>
+        </div>
+      </div>
+
+      <div class="qa-card">
+        <div class="qa-head" onclick="toggleQA(this)">
+          <span>5. Thầy hỏi: "Giải thích cơ chế phát hiện lảng vảng của cảm biến PIR?"</span>
+          <span class="icon">▼</span>
+        </div>
+        <div class="qa-body">
+          Giải thích logic trong hàm `readSensors()`.
+          <div class="highlight-ans">
+            <strong>Cách trả lời:</strong> "Dạ, nếu ai đó chỉ đi ngang qua cửa (< 8s) thì hệ thống chỉ sáng đèn vàng chào đón. Nhưng nếu cảm biến PIR duy trì mức HIGH liên tục, cửa đang ở trạng thái KHÓA, và thời gian đứng vượt quá ngưỡng <code>PIR_ALARM_DELAY_MS = 8000ms</code> (8 giây), hệ thống sẽ đánh giá đây là hành vi lảng vảng rình mò và lập tức kích hoạt còi hú cùng Relay 2 để cảnh báo kẻ gian ạ."
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Dự án IoT SmartLock ESP32 • Báo cáo & Kiểm thử bởi Nguyễn Đức Duy (A48496) • Đại học Thăng Long 2026
+  </footer>
+
+</div>
+
+<script>
+function switchTab(tabId) {
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  
+  event.currentTarget.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
+function toggleQA(header) {
+  const card = header.parentElement;
+  card.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>
